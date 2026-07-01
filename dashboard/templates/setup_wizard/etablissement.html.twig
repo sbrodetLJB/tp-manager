@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configuration initiale (1/2) — TP Manager{% endblock %}
+
+{% block body %}
+    <p class="help">Étape 1/2 — Établissement</p>
+    <h1>Bienvenue sur TP Manager</h1>
+    <p>Renseignez les informations de votre établissement. Rien n'est encore enregistré : la sauvegarde n'a lieu qu'après vérification de l'agent à l'étape suivante.</p>
+    {{ form_start(form) }}
+        <div class="row">{{ form_row(form.nom) }}</div>
+        <div class="row">{{ form_row(form.dbEngine) }}</div>
+        <div class="row">{{ form_row(form.webRootBase) }}</div>
+        <button type="submit">Continuer →</button>
+    {{ form_end(form) }}
+{% endblock %}

@@ -34,7 +34,7 @@ class AgentConnectionController extends AbstractController
         if (null === $etablissement) {
             $this->addFlash('warning', "Configurez d'abord l'établissement avant de connecter l'agent.");
 
-            return $this->redirectToRoute('etablissement_configurer');
+            return $this->redirectToRoute('setup_wizard_etablissement');
         }
 
         $connection = $etablissement->getAgentConnection() ?? new AgentConnection();

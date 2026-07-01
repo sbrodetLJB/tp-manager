@@ -39,7 +39,7 @@ class ClasseController extends AbstractController
         if (null === $etablissement) {
             $this->addFlash('warning', "Configurez d'abord l'établissement avant de créer une classe.");
 
-            return $this->redirectToRoute('etablissement_configurer');
+            return $this->redirectToRoute('setup_wizard_etablissement');
         }
 
         $classe = new Classe();

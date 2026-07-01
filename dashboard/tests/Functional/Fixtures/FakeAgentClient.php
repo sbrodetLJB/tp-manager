@@ -25,9 +25,17 @@ final class FakeAgentClient implements AgentClientInterface
 
     public ?string $failAtStep = null;
 
+    public bool $failGetConfig = false;
+
+    public string $configDbEngine = 'mysql';
+
     public function getConfig(AgentConnection $connection): AgentConfig
     {
-        return new AgentConfig('0.1.0', 'v1', 'mysql', null, '/var/www/html', null, null);
+        if ($this->failGetConfig) {
+            throw new AgentException('AGENT_UNREACHABLE', "Impossible de joindre l'agent (simulé).");
+        }
+
+        return new AgentConfig('0.1.0', 'v1', $this->configDbEngine, null, '/var/www/html', null, null);
     }
 
     public function createLinuxAccount(AgentConnection $connection, LinuxAccountRequest $request): LinuxAccountResponse

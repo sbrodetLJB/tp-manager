@@ -31,7 +31,7 @@ class EtablissementController extends AbstractController
         $etablissement = $this->etablissementRepository->findSingleton();
 
         if (null === $etablissement) {
-            return $this->redirectToRoute('etablissement_configurer');
+            return $this->redirectToRoute('setup_wizard_etablissement');
         }
 
         return $this->render('etablissement/show.html.twig', [
@@ -71,7 +71,7 @@ class EtablissementController extends AbstractController
         if (null === $etablissement) {
             $this->addFlash('warning', "Configurez d'abord l'établissement avant de créer un gabarit de nommage.");
 
-            return $this->redirectToRoute('etablissement_configurer');
+            return $this->redirectToRoute('setup_wizard_etablissement');
         }
 
         $namingPattern = new NamingPattern();

@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configuration initiale (2/2) — TP Manager{% endblock %}
+
+{% block body %}
+    <p class="help">Étape 2/2 — Agent ({{ etablissementNom }})</p>
+    <h1>Connecter l'agent de la VM de TP</h1>
+    <p class="help">
+        Le jeton est affiché une seule fois par <code>install.sh</code> sur la VM de TP.
+        La connexion est vérifiée avant tout enregistrement : en cas d'échec, rien n'est sauvegardé
+        (ni l'établissement, ni l'agent) et vous pouvez corriger l'URL ou le jeton ci-dessous.
+    </p>
+    {{ form_start(form) }}
+        <div class="row">{{ form_row(form.baseUrl) }}</div>
+        <div class="row">{{ form_row(form.token) }}</div>
+        <button type="submit">Vérifier et terminer</button>
+    {{ form_end(form) }}
+    <p><a href="{{ path('setup_wizard_etablissement') }}">← Revenir à l'étape 1</a></p>
+{% endblock %}
