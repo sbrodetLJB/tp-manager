@@ -28,13 +28,32 @@ cp -r /opt/tpagent-src/agent/* /opt/tpagent/   # ou rsync, voir le runbook
 sudo /opt/tpagent/packaging/install.sh
 ```
 
+Si le moteur choisi est PostgreSQL plutôt que MySQL/MariaDB (le défaut),
+précisez-le pour que le contrôle des prérequis (étape suivante) vérifie le
+bon moteur :
+
+```bash
+sudo env TPAGENT_DB_ENGINE=postgresql /opt/tpagent/packaging/install.sh
+```
+
 L'installateur :
+- **vérifie d'abord les prérequis de la section 1** (`openssh-server`,
+  moteur BDD choisi installé et démarré, Python 3.11+) et s'arrête
+  immédiatement avec un message clair si l'un d'eux manque, avant toute
+  modification du système ;
 - crée un utilisateur système `tpagent` (sans droits sudo étendus, seulement
   6 scripts précis autorisés — voir [security.md](security.md)) ;
 - installe le fragment `sudoers` et la configuration SSH du chroot SFTP ;
 - **génère un jeton bearer et l'affiche une seule fois** — copiez-le
-  immédiatement, il servira à connecter le dashboard.
-- installe et démarre le service `tpagent` (via `systemd` si disponible).
+  immédiatement, il servira à connecter le dashboard ;
+- installe et démarre le service `tpagent` (via `systemd` si disponible) ;
+- **vous invite à définir un mot de passe administrateur pour le SGBD**
+  (`root` MySQL/MariaDB ou rôle `postgres`) — recommandé, car par défaut ce
+  compte n'a aucun mot de passe (il n'est joignable que localement, voir
+  [security.md](security.md)). Vous pouvez laisser vide pour l'ignorer et le
+  faire plus tard ; ce mot de passe n'est jamais utilisé par l'agent
+  lui-même et n'est ni stocké ni journalisé par l'installateur — voir
+  [runbooks/secure-db-admin-account.md](runbooks/secure-db-admin-account.md).
 
 Détails complets, dépannage : [runbooks/install-agent-on-vm.md](runbooks/install-agent-on-vm.md).
 

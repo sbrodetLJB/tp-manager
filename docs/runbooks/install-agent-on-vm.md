@@ -25,10 +25,15 @@ changer sans adapter `packaging/sudoers.d/tpagent` en conséquence.
 
 ```bash
 sudo /opt/tpagent/packaging/install.sh
+# ou, si le moteur cible est PostgreSQL plutôt que MySQL/MariaDB :
+sudo env TPAGENT_DB_ENGINE=postgresql /opt/tpagent/packaging/install.sh
 ```
 
 Étapes effectuées (idempotentes, peuvent être relancées sans risque) :
 
+0. **Vérification des prérequis** (`openssh-server`, moteur BDD choisi
+   installé et démarré, Python 3.11+) — arrêt immédiat avec un message
+   explicite si l'un d'eux manque, avant toute modification du système.
 1. Création du groupe `tp-students` et de l'utilisateur système `tpagent`.
 2. Verrouillage des scripts privilégiés (`root:root`, mode `0750`).
 3. Installation du fragment sudoers (`visudo -c` obligatoire avant activation).
@@ -46,10 +51,18 @@ sudo /opt/tpagent/packaging/install.sh
    plus jamais affiché en clair.
 6. Installation des dépendances Python (venv dédié) et démarrage du service
    `tpagent.service` (si systemd est détecté).
+7. **Invite interactive pour un mot de passe administrateur du SGBD**
+   (`root` MySQL/MariaDB ou rôle `postgres`, sans mot de passe par défaut —
+   voir [../security.md](../security.md)). Laisser vide pour ignorer ;
+   sautée automatiquement en mode `--dev` ou en installation scriptée (entrée
+   non interactive) — voir
+   [secure-db-admin-account.md](secure-db-admin-account.md).
 
 ## 3. Choisir le moteur de base de données
 
-Définissez `TPAGENT_DB_ENGINE=mysql` (ou `postgresql`) dans
+Si vous n'avez pas déjà précisé le moteur à l'étape 2 (`TPAGENT_DB_ENGINE=...`
+sur la ligne de commande), ou si vous souhaitez en changer plus tard,
+définissez `TPAGENT_DB_ENGINE=mysql` (ou `postgresql`) dans
 `/opt/tpagent/tpagent.env`, puis redémarrez le service :
 
 ```bash

@@ -48,6 +48,38 @@ son mot de passe — l'alternative (déprovisionner puis reprovisionner)
 détruirait ses données. Voir `ProjectCredentialResetService` côté dashboard
 et le bouton "Réinitialiser les identifiants" sur la page d'un projet.
 
+## Prérequis et compte administrateur du SGBD
+
+`install.sh` vérifie les prérequis documentés (`docs/guide-utilisateur.md`,
+section "Prérequis" : `openssh-server`, moteur BDD choisi joignable, Python
+3.11+) **avant** toute modification du système — un échec immédiat et
+explicite plutôt qu'une installation à moitié faite.
+
+Par défaut, le compte administrateur du SGBD (`root` pour MySQL/MariaDB,
+`postgres` pour PostgreSQL) n'a aucun mot de passe : il n'est joignable que
+localement via l'authentification `unix_socket` (MySQL/MariaDB) ou `peer`
+(PostgreSQL), sur laquelle l'agent s'appuie exclusivement (voir
+`tpagent-mysql-provision.sh`/`tpagent-postgres-provision.sh`). En fin
+d'installation, `install.sh` propose (en interactif uniquement — jamais en
+mode dev ni en installation scriptée) de définir un mot de passe
+supplémentaire sur ce compte, en défense en profondeur si la configuration
+réseau du SGBD venait à changer par erreur. Ce mot de passe :
+
+- n'est jamais utilisé par l'agent lui-même (qui continue d'utiliser
+  exclusivement l'authentification locale) ;
+- n'est ni stocké ni journalisé par `install.sh` ;
+- est appliqué sans désactiver l'authentification locale existante côté
+  MariaDB (`IDENTIFIED VIA unix_socket OR mysql_native_password USING
+  PASSWORD(...)`, vérifié en pratique contre le fake-vm : l'accès local sans
+  mot de passe reste fonctionnel) et côté PostgreSQL (`ALTER ROLE postgres
+  WITH PASSWORD ...` n'affecte jamais l'authentification `peer`, décidée par
+  `pg_hba.conf` et non par la présence d'un mot de passe sur le rôle).
+
+Sur MySQL (Oracle, par opposition à MariaDB), cette combinaison n'a pas
+d'équivalent direct : `install.sh` détecte ce cas et n'automatise rien plutôt
+que de risquer de casser l'accès local de l'agent — voir
+[runbooks/secure-db-admin-account.md](runbooks/secure-db-admin-account.md).
+
 ## Anti-injection
 
 Deux couches distinctes, avec des rôles différents :
