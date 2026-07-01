@@ -12,6 +12,8 @@ web sous `/var/www/html/<nom_eleve>/<projet>/...`.
 > de masse) sont implémentées et vérifiées de bout en bout contre une VM
 > jetable (`tools/fake-vm/`). Voir [docs/architecture.md](docs/architecture.md).
 
+![Page d'un projet provisionné, avec son journal de provisioning](docs/screenshots/05-projet-provisionne.png)
+
 ## Pourquoi
 
 Créer manuellement, à chaque rentrée ou chaque TP, un compte Linux, une base de

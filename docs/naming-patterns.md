@@ -60,3 +60,5 @@ La page de création d'un gabarit calcule un aperçu en direct sur un
 échantillon fictif contenant un doublon volontaire (`Dupont Jean`, `Martin
 Paul` x2, `Lefèvre Amélie`), pour visualiser le résultat — y compris la
 gestion des collisions — avant d'importer de vrais élèves.
+
+![Aperçu d'un gabarit avec collision suffixée automatiquement](screenshots/10-gabarit-apercu.png)

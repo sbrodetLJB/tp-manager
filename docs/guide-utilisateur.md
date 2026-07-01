@@ -68,8 +68,12 @@ de configuration à moitié faite.
    celui choisi à l'étape 1. En cas de désaccord ou d'agent injoignable, rien
    n'est enregistré et un message clair explique quoi corriger.
 
+![Étape 1 de l'assistant de configuration](screenshots/01-wizard-etape1.png)
+
 Une fois l'assistant terminé, vous arrivez sur la page de l'établissement
 avec le statut de l'agent affiché ("prêt à provisionner").
+
+![Page établissement avec agent connecté et gabarit actif](screenshots/02-etablissement.png)
 
 ## 5. Convention de nommage des identifiants
 
@@ -94,6 +98,8 @@ par exemple), un suffixe numérique est ajouté automatiquement
 Un aperçu en direct (sur un échantillon fictif incluant un doublon) est
 affiché sous le formulaire pour vérifier le résultat avant de valider.
 
+![Aperçu en direct d'un gabarit, avec collision automatiquement suffixée](screenshots/10-gabarit-apercu.png)
+
 ## 6. Créer une classe et importer les élèves
 
 1. **Classes → Nouvelle classe** : nom et année scolaire.
@@ -106,9 +112,20 @@ affiché sous le formulaire pour vérifier le résultat avant de valider.
      avant toute écriture en base — vérifiez, puis cliquez sur "Confirmer
      l'import".
 
+   ![Aperçu d'import CSV avant confirmation](screenshots/09-import-apercu.png)
+
+La page de la classe liste ensuite chaque élève avec son login généré, le
+nombre de projets, et les actions de masse (voir section 9) :
+
+![Page d'une classe avec ses élèves et les actions de masse](screenshots/03-classe.png)
+
 ## 7. Créer et provisionner un projet
 
-Depuis la page d'un élève, **Nouveau projet** : donnez un nom (ex:
+La page d'un élève liste ses projets :
+
+![Page d'un élève et ses projets](screenshots/04-eleve.png)
+
+Depuis cette page, **Nouveau projet** : donnez un nom (ex:
 `site-vitrine`) et choisissez l'authentification SSH/SFTP :
 
 - **Mot de passe généré** — le cas le plus simple, un mot de passe aléatoire
@@ -121,9 +138,18 @@ Cliquez sur **Provisionner** : l'agent crée dans l'ordre le compte Linux, la
 base de données dédiée, puis le dépôt web. Le journal de provisioning (visible
 sur la page du projet) trace chaque étape.
 
+![Page d'un projet provisionné avec son journal](screenshots/05-projet-provisionne.png)
+
 En cas de succès, vous êtes redirigé vers une page d'identifiants qui ne
 s'affiche **qu'une seule fois** : notez ou transmettez les mots de passe
 immédiatement, ils ne pourront plus être récupérés depuis TP Manager.
+
+![Affichage unique des identifiants générés](screenshots/07-identifiants-affichage-unique.png)
+
+Si quelqu'un revisite ce même lien plus tard, un message clair l'indique sans
+jamais réafficher le secret :
+
+![Message affiché lors d'une seconde visite du lien](screenshots/08-identifiants-deja-consultes.png)
 
 ## 8. Distribuer les identifiants à la classe
 
@@ -131,6 +157,8 @@ La page **Fiche identifiants** d'une classe (bouton sur la page classe) liste,
 pour chaque projet, le lien de récupération à usage unique s'il n'a pas encore
 été consulté (ou la date de consultation sinon). C'est une page imprimable :
 `Ctrl+P` puis "Enregistrer en PDF" depuis le navigateur.
+
+![Fiche identifiants d'une classe](screenshots/06-fiche-credentials.png)
 
 ## 9. Actions de masse sur une classe
 
