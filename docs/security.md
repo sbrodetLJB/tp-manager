@@ -95,6 +95,39 @@ dans son propre dossier autorisé, `cd ..` depuis la racine reste confiné,
 lecture de `/etc/passwd` par chemin absolu refusée car inexistant dans le
 chroot).
 
+## Portée des privilèges sur la base de données de l'élève
+
+`GRANT ALL PRIVILEGES ON <db>.* TO <user> WITH GRANT OPTION` (MySQL) donne à
+l'élève tous les droits sur **sa seule base**, avec la possibilité de
+déléguer (`GRANT`/`REVOKE`) des sous-ensembles de ces droits à des comptes
+**déjà existants** — utile pour qu'il crée par exemple, avec l'aide de
+l'enseignant, un compte applicatif en lecture seule pour son propre projet.
+
+Ce que `WITH GRANT OPTION` permet et ne permet pas (vérifié en pratique
+contre le fake-vm) :
+
+| Action | Résultat |
+|---|---|
+| Requêtes DDL/DML sur sa propre base | ✅ autorisé |
+| `GRANT`/`REVOKE` d'un sous-ensemble de ses droits à un compte existant, sur sa propre base | ✅ autorisé (compte "lecture seule" vérifié fonctionnel : `SELECT` OK, `INSERT` refusé) |
+| Accès à la base d'un **autre** projet du même élève | ❌ refusé (`Access denied ... to database`) |
+| Accès à la base d'un **autre** élève | ❌ refusé |
+| `CREATE USER` (créer un nouveau compte lui-même) | ❌ refusé — privilège global MySQL, non limitable à une seule base, volontairement pas accordé |
+
+Le dernier point est une limite assumée : MySQL ne permet pas de scoper
+`CREATE USER` à une base précise. L'accorder rendrait n'importe quel élève
+capable de créer/supprimer des comptes affectant potentiellement l'ensemble
+du serveur, cassant l'isolation entre élèves au niveau des *comptes* (même si
+les *données* resteraient isolées). Si un établissement a besoin que les
+élèves créent eux-mêmes des comptes secondaires, la marche à suivre reste que
+l'enseignant (ou l'agent, via un mécanisme à ajouter si besoin) pré-crée les
+comptes secondaires, que l'élève configure ensuite via `GRANT`.
+
+PostgreSQL : le rôle propriétaire (`OWNER`) d'une base a nativement les mêmes
+garanties (droits complets sur ses objets, avec possibilité de les déléguer à
+des rôles existants) sans clause équivalente à ajouter — c'est une propriété
+de la notion de propriétaire en PostgreSQL, pas une option à activer.
+
 ## Secrets
 
 - **Jeton agent** (`AgentConnection::bearerTokenEncrypted`) : chiffré au repos

@@ -39,7 +39,16 @@ case "$action" in
 
         mysql -e "CREATE DATABASE \`$db_name\` CHARACTER SET $charset;"
         mysql -e "CREATE USER '$db_user'@'localhost' IDENTIFIED BY '$escaped_password';"
-        mysql -e "GRANT ALL PRIVILEGES ON \`$db_name\`.* TO '$db_user'@'localhost';"
+        # WITH GRANT OPTION : l'élève peut déléguer (GRANT/REVOKE) des
+        # sous-ensembles de ses propres droits à des comptes déjà existants
+        # sur SA base (ex: un compte applicatif en lecture seule), sans que
+        # cela déborde sur les autres bases — la portée reste "database-only"
+        # car GRANT OPTION ne peut re-déléguer que ce que ce compte possède
+        # déjà, c'est-à-dire uniquement des droits sur $db_name. L'élève ne
+        # peut toujours pas créer de nouveaux comptes lui-même (CREATE USER
+        # est un privilège global, volontairement non accordé) — voir
+        # docs/security.md.
+        mysql -e "GRANT ALL PRIVILEGES ON \`$db_name\`.* TO '$db_user'@'localhost' WITH GRANT OPTION;"
         mysql -e "FLUSH PRIVILEGES;"
         exit 0
         ;;
