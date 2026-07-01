@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Projets "{{ nom }}" créés — {{ classe.nom }}{% endblock %}
+
+{% block body %}
+    <h1>Projets "{{ nom }}" — {{ classe.nom }}</h1>
+
+    {% set crees = resultats|filter(r => r.created)|length %}
+    {% set ignores = resultats|length - crees %}
+    <p>
+        <span class="badge">{{ crees }} créé(s)</span>
+        <span class="badge">{{ ignores }} ignoré(s) (déjà existant)</span>
+    </p>
+
+    <table>
+        <thead><tr><th>Élève</th><th>Résultat</th></tr></thead>
+        <tbody>
+        {% for resultat in resultats %}
+            <tr>
+                <td>{{ resultat.eleve.prenom }} {{ resultat.eleve.nom }}</td>
+                <td>
+                    {% if resultat.created %}
+                        <span class="badge">créé</span>
+                    {% else %}
+                        <span class="badge">ignoré (déjà existant)</span>
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <p>
+        <a class="btn" href="{{ path('classe_show', {id: classe.id}) }}">Retour à la classe</a>
+    </p>
+{% endblock %}

@@ -3,8 +3,10 @@
 namespace App\Service\Provisioning;
 
 use App\Entity\Classe;
+use App\Entity\Projet;
 use App\Enum\ProvisioningStatus;
 use App\Enum\SshAuthMethod;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Actions de masse par classe : une file d'appels individuels aux
@@ -23,7 +25,47 @@ final class ClassBulkOrchestrator
         private readonly ProjectProvisioningOrchestrator $provisioningOrchestrator,
         private readonly ProjectDeprovisioningOrchestrator $deprovisioningOrchestrator,
         private readonly CredentialRevealTokenManager $credentialRevealTokenManager,
+        private readonly EntityManagerInterface $entityManager,
     ) {
+    }
+
+    /**
+     * Crée un projet du même nom pour chaque élève de la classe qui n'en a
+     * pas déjà un — les élèves déjà pourvus sont ignorés silencieusement
+     * (le projet existant n'est jamais modifié), avec le détail par élève
+     * renvoyé pour affichage.
+     *
+     * @return array<int, array{eleve: object, created: bool}>
+     */
+    public function createProjectForAll(Classe $classe, string $nom, SshAuthMethod $sshAuthMethod): array
+    {
+        $etablissement = $classe->getEtablissement();
+        $rows = [];
+
+        foreach ($classe->getEleves() as $eleve) {
+            $dejaExistant = false;
+            foreach ($eleve->getProjets() as $projetExistant) {
+                if ($projetExistant->getNom() === $nom) {
+                    $dejaExistant = true;
+                    break;
+                }
+            }
+
+            if ($dejaExistant) {
+                $rows[] = ['eleve' => $eleve, 'created' => false];
+                continue;
+            }
+
+            $projet = new Projet($etablissement->getDbEngine());
+            $projet->setEleve($eleve)->setNom($nom)->setSshAuthMethod($sshAuthMethod);
+            $this->entityManager->persist($projet);
+
+            $rows[] = ['eleve' => $eleve, 'created' => true];
+        }
+
+        $this->entityManager->flush();
+
+        return $rows;
     }
 
     /**

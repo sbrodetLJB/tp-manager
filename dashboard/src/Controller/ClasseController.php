@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Classe;
+use App\Entity\Projet;
 use App\Form\ClasseType;
+use App\Form\ProjetType;
 use App\Repository\ClasseRepository;
 use App\Repository\CredentialRevealRepository;
 use App\Repository\EtablissementRepository;
@@ -90,6 +92,46 @@ class ClasseController extends AbstractController
         return $this->render('classe/fiche_credentials.html.twig', [
             'classe' => $classe,
             'lignes' => $lignes,
+        ]);
+    }
+
+    /**
+     * Crée un même projet (nom + méthode SSH) pour tous les élèves de la
+     * classe qui n'en ont pas déjà un du même nom — étape préalable au
+     * provisioning de masse (qui ne fait que provisionner des projets déjà
+     * existants, jamais n'en crée).
+     */
+    #[Route('/{id}/projets/nouveau-pour-tous', name: 'classe_projet_new_bulk', methods: ['GET', 'POST'])]
+    public function nouveauProjetPourTous(Classe $classe, Request $request, ClassBulkOrchestrator $bulkOrchestrator): Response
+    {
+        $etablissement = $classe->getEtablissement();
+        $projetTemplate = new Projet($etablissement->getDbEngine());
+
+        $form = $this->createForm(ProjetType::class, $projetTemplate);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $resultats = $bulkOrchestrator->createProjectForAll($classe, $projetTemplate->getNom(), $projetTemplate->getSshAuthMethod());
+
+            $crees = count(array_filter($resultats, static fn (array $r) => $r['created']));
+            $ignores = count($resultats) - $crees;
+            $this->addFlash('success', sprintf(
+                '%d projet(s) "%s" créé(s)%s.',
+                $crees,
+                $projetTemplate->getNom(),
+                $ignores > 0 ? sprintf(' (%d élève(s) en avaient déjà un du même nom, ignoré(s))', $ignores) : '',
+            ));
+
+            return $this->render('classe/projet_bulk_result.html.twig', [
+                'classe' => $classe,
+                'nom' => $projetTemplate->getNom(),
+                'resultats' => $resultats,
+            ]);
+        }
+
+        return $this->render('classe/projet_new_bulk.html.twig', [
+            'form' => $form,
+            'classe' => $classe,
         ]);
     }
 

@@ -12,6 +12,11 @@
     </p>
 
     <p>
+        <a class="btn" href="{{ path('classe_projet_new_bulk', {id: classe.id}) }}">Créer un projet pour toute la classe</a>
+    </p>
+    <p class="help">Crée un projet du même nom pour chaque élève qui n'en a pas déjà un — préalable au provisioning de masse ci-dessous.</p>
+
+    <p>
         <form method="post" action="{{ path('classe_provisionner_tout', {id: classe.id}) }}" style="display:inline">
             <input type="hidden" name="_token" value="{{ csrf_token('classe_provisionner_tout_' ~ classe.id) }}">
             <button type="submit">Provisionner tous les projets éligibles</button>

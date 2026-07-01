@@ -67,7 +67,7 @@ final class ClassBulkOrchestratorTest extends KernelTestCase
             $this->entityManager,
         );
 
-        $this->bulkOrchestrator = new ClassBulkOrchestrator($provisioningOrchestrator, $deprovisioningOrchestrator, $tokenManager);
+        $this->bulkOrchestrator = new ClassBulkOrchestrator($provisioningOrchestrator, $deprovisioningOrchestrator, $tokenManager, $this->entityManager);
     }
 
     public function testBulkProvisioningSurfacesPartialFailurePerRowAndSkipsPublicKeyProjects(): void

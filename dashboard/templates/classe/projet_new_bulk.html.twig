@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau projet pour toute la classe — {{ classe.nom }}{% endblock %}
+
+{% block body %}
+    <h1>Nouveau projet pour tous les élèves de {{ classe.nom }}</h1>
+    <p class="help">
+        Un projet de ce nom est créé pour chaque élève qui n'en a pas déjà un du même nom
+        (les projets existants ne sont jamais modifiés). Utilisez ensuite
+        "Provisionner tous les projets éligibles" depuis la page de la classe.
+    </p>
+    {{ form_start(form) }}
+        <div class="row">{{ form_row(form.nom) }}</div>
+        <div class="row">{{ form_row(form.sshAuthMethod) }}</div>
+        <button type="submit">Créer pour toute la classe</button>
+    {{ form_end(form) }}
+    <p><a href="{{ path('classe_show', {id: classe.id}) }}">← Retour à la classe</a></p>
+{% endblock %}

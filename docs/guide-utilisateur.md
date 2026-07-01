@@ -121,18 +121,35 @@ nombre de projets, et les actions de masse (voir section 9) :
 
 ## 7. Créer et provisionner un projet
 
+Un projet peut être créé de deux façons :
+
+- **Élève par élève** — depuis la page d'un élève, bouton **Nouveau projet**.
+  Pratique pour un projet ponctuel ou spécifique à un seul élève.
+- **Pour toute la classe en une fois** — depuis la page de la classe, bouton
+  **Créer un projet pour toute la classe** : indiquez un nom (ex:
+  `site-vitrine`) et la méthode SSH, et ce projet est créé pour chaque élève
+  de la classe qui n'en a pas déjà un du même nom (les élèves qui en ont déjà
+  un ne sont pas touchés). C'est le point de départ recommandé avant
+  d'utiliser le provisioning de masse (section 9) : celui-ci ne fait que
+  *provisionner* des projets déjà créés, il n'en crée jamais de nouveaux.
+
+  ![Création d'un projet pour toute la classe](screenshots/11-projet-nouveau-pour-classe.png)
+
 La page d'un élève liste ses projets :
 
 ![Page d'un élève et ses projets](screenshots/04-eleve.png)
 
-Depuis cette page, **Nouveau projet** : donnez un nom (ex:
-`site-vitrine`) et choisissez l'authentification SSH/SFTP :
+Dans les deux cas, il faut donner un nom au projet et choisir
+l'authentification SSH/SFTP :
 
 - **Mot de passe généré** — le cas le plus simple, un mot de passe aléatoire
   est créé au moment du provisioning.
 - **Clé publique** — l'élève doit alors coller sa clé publique SSH au moment
   de cliquer sur "Provisionner" (elle n'est jamais enregistrée en base, seule
-  son empreinte l'est, pour vérification ultérieure).
+  son empreinte l'est, pour vérification ultérieure). Ce mode n'est pas
+  compatible avec le provisioning de masse (chaque élève doit provisionner
+  son propre projet individuellement, puisque sa clé doit être saisie à ce
+  moment-là).
 
 Cliquez sur **Provisionner** : l'agent crée dans l'ordre le compte Linux, la
 base de données dédiée, puis le dépôt web. Le journal de provisioning (visible
