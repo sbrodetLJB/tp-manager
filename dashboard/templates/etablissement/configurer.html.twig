@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configurer l'établissement — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>Configurer l'établissement</h1>
+    {{ form_start(form) }}
+        <div class="row">{{ form_row(form.nom) }}</div>
+        <div class="row">{{ form_row(form.dbEngine) }}</div>
+        <div class="row">{{ form_row(form.webRootBase) }}</div>
+        <button type="submit">Enregistrer</button>
+    {{ form_end(form) }}
+{% endblock %}

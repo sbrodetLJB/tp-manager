@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Importer des élèves — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>Importer des élèves dans {{ classe.nom }}</h1>
+    <p class="help">
+        Colonnes attendues : <code>nom</code>, <code>prenom</code>, <code>matricule</code> (optionnelle).
+        Délimiteur <code>,</code> ou <code>;</code> détecté automatiquement.
+        Login généré via le gabarit actif « {{ namingPattern.label }} » ({{ namingPattern.template }}).
+    </p>
+    {{ form_start(form) }}
+        <div class="row">{{ form_row(form.csvFile) }}</div>
+        <button type="submit">Prévisualiser l'import</button>
+    {{ form_end(form) }}
+{% endblock %}

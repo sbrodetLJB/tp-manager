@@ -1,0 +1,15 @@
+{
+  "request": {
+    "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+    "username": "dupont2",
+    "homeDir": "/var/www/html/dupont2",
+    "authMethod": "password",
+    "password": "Xk29fQm3Lp8rTz41"
+  },
+  "response": {
+    "username": "dupont2",
+    "uid": 2001,
+    "homeDir": "/var/www/html/dupont2",
+    "status": "created"
+  }
+}

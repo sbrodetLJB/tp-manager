@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Provisioning réussi — {{ projet.nom }}{% endblock %}
+
+{% block body %}
+    <h1>Provisioning réussi : {{ projet.nom }}</h1>
+    <p class="flash flash-success">
+        Compte Linux <code>{{ projet.linuxUsername }}</code>, base <code>{{ projet.dbName }}</code> et
+        dépôt web <code>{{ projet.webPath }}</code> créés sur la VM de TP.
+    </p>
+
+    <p class="flash flash-warning">
+        Les mots de passe ci-dessous ne sont affichés qu'une seule fois — notez-les avant de quitter cette page
+        (la distribution "affichage unique" formalisée arrive en Phase 3).
+    </p>
+
+    <table>
+        <tbody>
+            <tr><th>Mot de passe SSH/SFTP ({{ projet.linuxUsername }})</th><td><code>{{ result.linuxPassword }}</code></td></tr>
+            <tr><th>Mot de passe base de données ({{ projet.dbName }})</th><td><code>{{ result.dbPassword }}</code></td></tr>
+        </tbody>
+    </table>
+
+    <p><a class="btn" href="{{ path('projet_show', {id: projet.id}) }}">Voir le projet</a></p>
+{% endblock %}

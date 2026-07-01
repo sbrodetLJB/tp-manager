@@ -1,0 +1,16 @@
+{
+  "request": {
+    "requestId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+    "dbName": "dupont2_sitevitrine",
+    "dbUser": "dupont2_sitevitrine",
+    "dbPassword": "Qm3Lp8rTz41Xk29f",
+    "charset": "utf8mb4"
+  },
+  "response": {
+    "engine": "mysql",
+    "dbName": "dupont2_sitevitrine",
+    "dbUser": "dupont2_sitevitrine",
+    "grantsScope": "database-only",
+    "status": "created"
+  }
+}

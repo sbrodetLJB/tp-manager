@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ classe.nom }} — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>{{ classe.nom }} <span class="badge">{{ classe.anneeScolaire }}</span></h1>
+
+    <p>
+        <a class="btn" href="{{ path('eleve_new', {id: classe.id}) }}">Ajouter un élève</a>
+        <a class="btn btn-secondary" href="{{ path('import_new', {id: classe.id}) }}">Importer un CSV</a>
+    </p>
+
+    {% if classe.eleves|length == 0 %}
+        <p>Aucun élève dans cette classe.</p>
+    {% else %}
+        <table>
+            <thead><tr><th>Nom</th><th>Prénom</th><th>Login</th><th>Suffixe</th><th>Projets</th></tr></thead>
+            <tbody>
+            {% for eleve in classe.eleves %}
+                <tr>
+                    <td>{{ eleve.nom }}</td>
+                    <td>{{ eleve.prenom }}</td>
+                    <td><a href="{{ path('eleve_show', {id: eleve.id}) }}"><code>{{ eleve.login }}</code></a></td>
+                    <td>{{ eleve.loginSuffix ?? '—' }}</td>
+                    <td>{{ eleve.projets|length }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

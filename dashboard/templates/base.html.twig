@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <title>{% block title %}TP Manager{% endblock %}</title>
+        {% block stylesheets %}
+        <style>
+            body { font-family: sans-serif; margin: 0; color: #1a1a1a; }
+            header { background: #1f2d3d; color: #fff; padding: 0.75rem 1.5rem; }
+            header a { color: #fff; text-decoration: none; margin-right: 1.25rem; }
+            header a.brand { font-weight: bold; font-size: 1.1rem; }
+            main { padding: 1.5rem; max-width: 900px; }
+            .flash { padding: 0.6rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
+            .flash-success { background: #e3f6e5; color: #1e5c2a; }
+            .flash-warning { background: #fff4d6; color: #7a5b00; }
+            .flash-danger { background: #fde3e3; color: #8a1f1f; }
+            table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+            th, td { border: 1px solid #ddd; padding: 0.4rem 0.6rem; text-align: left; }
+            th { background: #f4f4f4; }
+            form .row { margin-bottom: 0.9rem; }
+            label { display: block; font-weight: 600; margin-bottom: 0.2rem; }
+            input, select { padding: 0.35rem; width: 100%; max-width: 360px; box-sizing: border-box; }
+            button, .btn { background: #1f2d3d; color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+            .btn-secondary { background: #6c757d; }
+            .help { color: #666; font-size: 0.85rem; }
+            .badge { padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.8rem; background: #eee; }
+        </style>
+        {% endblock %}
+    </head>
+    <body>
+        <header>
+            <a class="brand" href="{{ path('home') }}">TP Manager</a>
+            <a href="{{ path('etablissement_show') }}">Établissement</a>
+            <a href="{{ path('classe_index') }}">Classes</a>
+        </header>
+        <main>
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="flash flash-{{ label }}">{{ message }}</div>
+                {% endfor %}
+            {% endfor %}
+            {% block body %}{% endblock %}
+        </main>
+    </body>
+</html>

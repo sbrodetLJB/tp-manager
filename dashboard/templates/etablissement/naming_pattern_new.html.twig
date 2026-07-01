@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Nouveau gabarit de nommage — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>Nouveau gabarit de nommage</h1>
+    {{ form_start(form) }}
+        <div class="row">{{ form_row(form.label) }}</div>
+        <div class="row">{{ form_row(form.template) }}</div>
+        <div class="row">{{ form_row(form.maxLength) }}</div>
+        <button type="submit">Enregistrer</button>
+    {{ form_end(form) }}
+
+    <h2>Aperçu</h2>
+    <p class="help">Calculé sur un échantillon fictif (dont un doublon volontaire) pour illustrer la résolution de collisions — aucune donnée n'est enregistrée.</p>
+    {% if preview|length > 0 %}
+        <table>
+            <thead><tr><th>Nom</th><th>Prénom</th><th>Login généré</th><th>Suffixe</th></tr></thead>
+            <tbody>
+            {% for row in preview %}
+                <tr>
+                    <td>{{ row.nom }}</td>
+                    <td>{{ row.prenom }}</td>
+                    <td><code>{{ row.login }}</code></td>
+                    <td>{{ row.suffix ?? '—' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Renseignez un gabarit ci-dessus pour voir l'aperçu.</p>
+    {% endif %}
+{% endblock %}

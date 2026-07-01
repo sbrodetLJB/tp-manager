@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  title: tpagent API
+  description: >
+    API exposée par l'agent installé sur la VM de TP. Le dashboard (PHP/Symfony)
+    est le seul client de cette API. Source de vérité partagée entre le client
+    (dashboard/src/Service/Agent) et le serveur (agent/src/tpagent/api) — toute
+    évolution du contrat doit être faite ici en premier.
+  version: "v1"
+servers:
+  - url: https://{host}:{port}
+    variables:
+      host:
+        default: tp-vm.local
+      port:
+        default: "8443"
+
+paths:
+  /health:
+    get:
+      summary: Vérification de disponibilité basique (sans authentification)
+      operationId: getHealth
+      responses:
+        "200":
+          description: Agent disponible
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /v1/config:
+    get:
+      summary: Configuration opérationnelle courante de l'agent
+      operationId: getConfig
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: Configuration de l'agent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/linux-accounts:
+    post:
+      summary: Crée un compte Linux restreint (SFTP-only) pour un élève
+      operationId: createLinuxAccount
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinuxAccountCreateRequest"
+      responses:
+        "201":
+          description: Compte créé (ou déjà existant avec les mêmes paramètres — idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinuxAccountResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+
+  /v1/databases:
+    post:
+      summary: Crée une base de données et un utilisateur scoppé à cette base
+      operationId: createDatabase
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DatabaseCreateRequest"
+      responses:
+        "201":
+          description: Base et utilisateur créés (ou déjà existants — idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatabaseResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+        "500":
+          $ref: "#/components/responses/Error"
+
+  /v1/webroots:
+    post:
+      summary: Crée l'arborescence de dépôt web d'un projet élève
+      operationId: createWebroot
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebrootCreateRequest"
+      responses:
+        "201":
+          description: Arborescence créée (ou déjà existante — idempotent)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebrootResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+
+components:
+  responses:
+    Unauthorized:
+      description: Bearer token manquant ou invalide
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Error:
+      description: Erreur métier (voir errorCode)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, uptimeSeconds]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        uptimeSeconds:
+          type: integer
+          minimum: 0
+
+    ConfigResponse:
+      type: object
+      required: [agentVersion, contractVersion, dbEngine, webRootBase]
+      properties:
+        agentVersion: { type: string }
+        contractVersion: { type: string }
+        dbEngine: { type: string, enum: [mysql, postgresql] }
+        dbEngineVersion: { type: string }
+        webRootBase: { type: string }
+        sftpChrootStrategy: { type: string }
+        hostname: { type: string }
+
+    LinuxAccountCreateRequest:
+      type: object
+      required: [requestId, username, homeDir, authMethod]
+      properties:
+        requestId: { type: string, format: uuid }
+        username: { type: string }
+        homeDir: { type: string }
+        authMethod: { type: string, enum: [password, public_key] }
+        password: { type: string }
+        publicKey: { type: string }
+        uidHint: { type: integer, nullable: true }
+
+    LinuxAccountResponse:
+      type: object
+      required: [username, uid, homeDir, status]
+      properties:
+        username: { type: string }
+        uid: { type: integer }
+        homeDir: { type: string }
+        status: { type: string, enum: [created, already_exists] }
+
+    DatabaseCreateRequest:
+      type: object
+      required: [requestId, dbName, dbUser, dbPassword]
+      properties:
+        requestId: { type: string, format: uuid }
+        dbName: { type: string }
+        dbUser: { type: string }
+        dbPassword: { type: string }
+        charset: { type: string }
+
+    DatabaseResponse:
+      type: object
+      required: [engine, dbName, dbUser, grantsScope, status]
+      properties:
+        engine: { type: string, enum: [mysql, postgresql] }
+        dbName: { type: string }
+        dbUser: { type: string }
+        grantsScope: { type: string, enum: [database-only] }
+        status: { type: string, enum: [created, already_exists] }
+
+    WebrootCreateRequest:
+      type: object
+      required: [requestId, eleveLogin, projetSlug, owner, group]
+      properties:
+        requestId: { type: string, format: uuid }
+        eleveLogin: { type: string }
+        projetSlug: { type: string }
+        owner: { type: string }
+        group: { type: string }
+
+    WebrootResponse:
+      type: object
+      required: [path, owner, group, mode, status]
+      properties:
+        path: { type: string }
+        owner: { type: string }
+        group: { type: string }
+        mode: { type: string }
+        status: { type: string, enum: [created, already_exists] }
+
+    ErrorResponse:
+      type: object
+      required: [errorCode, message]
+      properties:
+        errorCode: { type: string }
+        message: { type: string }
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer

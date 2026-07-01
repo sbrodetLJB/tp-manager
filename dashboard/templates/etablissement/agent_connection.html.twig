@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion à l'agent — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>Connexion à l'agent</h1>
+    <p class="help">
+        Le jeton est affiché une seule fois par <code>install.sh</code> sur la VM de TP.
+        La connexion est vérifiée automatiquement à l'enregistrement (appel à <code>GET /v1/config</code>).
+    </p>
+    {{ form_start(form) }}
+        <div class="row">{{ form_row(form.baseUrl) }}</div>
+        <div class="row">{{ form_row(form.token) }}</div>
+        <button type="submit">Enregistrer et vérifier</button>
+    {{ form_end(form) }}
+
+    {% if connection.id %}
+        <h2>Dernière vérification</h2>
+        <p>
+            Statut : <span class="badge">{{ connection.lastHealthCheckStatus.value }}</span><br>
+            {% if connection.lastHealthCheckAt %}
+                Vérifié le {{ connection.lastHealthCheckAt|date('d/m/Y H:i') }}<br>
+            {% endif %}
+            {% if connection.agentVersion %}Version agent : {{ connection.agentVersion }}<br>{% endif %}
+            {% if connection.agentDbEngine %}Moteur BDD agent : {{ connection.agentDbEngine.value }}<br>{% endif %}
+        </p>
+        <form method="post" action="{{ path('agent_connection_verify') }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('agent_connection_verify') }}">
+            <button type="submit">Re-vérifier maintenant</button>
+        </form>
+    {% endif %}
+{% endblock %}

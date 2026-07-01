@@ -1,0 +1,16 @@
+{
+  "_note": "Implémentation PostgreSQL prévue en Phase 3 — payload documenté par avance pour figer le contrat.",
+  "request": {
+    "requestId": "16fd2706-8baf-433b-82eb-8c7fada847da",
+    "dbName": "dupont2_sitevitrine",
+    "dbUser": "dupont2_sitevitrine",
+    "dbPassword": "Qm3Lp8rTz41Xk29f"
+  },
+  "response": {
+    "engine": "postgresql",
+    "dbName": "dupont2_sitevitrine",
+    "dbUser": "dupont2_sitevitrine",
+    "grantsScope": "database-only",
+    "status": "created"
+  }
+}

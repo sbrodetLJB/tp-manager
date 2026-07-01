@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ etablissement.nom }} — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>{{ etablissement.nom }}</h1>
+    <p>
+        Moteur BDD des projets élèves : <span class="badge">{{ etablissement.dbEngine.value }}</span><br>
+        Racine des dépôts web : <code>{{ etablissement.webRootBase }}</code>
+    </p>
+    <p><a class="btn btn-secondary" href="{{ path('etablissement_configurer') }}">Modifier la configuration</a></p>
+
+    <h2>Agent</h2>
+    {% set connection = etablissement.agentConnection %}
+    {% if connection %}
+        <p>
+            {{ connection.baseUrl }} — statut : <span class="badge">{{ connection.lastHealthCheckStatus.value }}</span>
+            {% if connection.agentVersion %}(version {{ connection.agentVersion }}){% endif %}
+        </p>
+    {% else %}
+        <p>Aucun agent connecté.</p>
+    {% endif %}
+    <p><a class="btn" href="{{ path('agent_connection_edit') }}">Configurer la connexion à l'agent</a></p>
+
+    <h2>Gabarits de nommage</h2>
+    {% if etablissement.namingPatterns|length == 0 %}
+        <p>Aucun gabarit de nommage défini.</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr><th>Label</th><th>Gabarit</th><th>Longueur max.</th><th>Actif</th><th></th></tr>
+            </thead>
+            <tbody>
+            {% for pattern in etablissement.namingPatterns %}
+                <tr>
+                    <td>{{ pattern.label }}</td>
+                    <td><code>{{ pattern.template }}</code></td>
+                    <td>{{ pattern.maxLength ?? '—' }}</td>
+                    <td>{% if pattern.active %}<span class="badge">actif</span>{% endif %}</td>
+                    <td>
+                        {% if not pattern.active %}
+                            <form method="post" action="{{ path('naming_pattern_activate', {id: pattern.id}) }}">
+                                <input type="hidden" name="_token" value="{{ csrf_token('naming_pattern_activate_' ~ pattern.id) }}">
+                                <button type="submit">Activer</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <p><a class="btn" href="{{ path('naming_pattern_new') }}">Nouveau gabarit</a></p>
+
+    <h2>Classes</h2>
+    <p><a class="btn" href="{{ path('classe_index') }}">Voir les classes</a></p>
+{% endblock %}

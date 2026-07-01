@@ -1,0 +1,14 @@
+# Installé dans /etc/sudoers.d/tpagent par packaging/install.sh (visudo -c
+# obligatoire avant activation). Chemins fixes, aucun wildcard d'argument :
+# sudoers ne peut restreindre que l'exécutable, pas ses arguments — chaque
+# script doit donc revalider lui-même ses arguments (voir lib/common.sh).
+#
+# tpagent-delete-linux-user.sh et tpagent-delete-webroot.sh (Phase 5),
+# tpagent-postgres-provision.sh (Phase 3) sont listés par avance : le
+# périmètre de sudoers est figé dès la conception, pas ajouté script par script.
+tpagent ALL=(root) NOPASSWD: /opt/tpagent/scripts/tpagent-create-linux-user.sh
+tpagent ALL=(root) NOPASSWD: /opt/tpagent/scripts/tpagent-delete-linux-user.sh
+tpagent ALL=(root) NOPASSWD: /opt/tpagent/scripts/tpagent-create-webroot.sh
+tpagent ALL=(root) NOPASSWD: /opt/tpagent/scripts/tpagent-delete-webroot.sh
+tpagent ALL=(root) NOPASSWD: /opt/tpagent/scripts/tpagent-mysql-provision.sh
+tpagent ALL=(root) NOPASSWD: /opt/tpagent/scripts/tpagent-postgres-provision.sh

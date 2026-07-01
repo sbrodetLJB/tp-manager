@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ projet.nom }} — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>{{ projet.nom }}</h1>
+    <p>
+        Élève : <a href="{{ path('eleve_show', {id: projet.eleve.id}) }}">{{ projet.eleve.prenom }} {{ projet.eleve.nom }}</a><br>
+        Moteur BDD : <span class="badge">{{ projet.dbEngine.value }}</span><br>
+        Statut de provisioning : <span class="badge">{{ projet.provisioningStatus.value }}</span>
+    </p>
+
+    {% if projet.provisioningStatus.value == 'provisioned' %}
+        <p>
+            Compte Linux : <code>{{ projet.linuxUsername }}</code><br>
+            Base de données : <code>{{ projet.dbName }}</code><br>
+            Dépôt web : <code>{{ projet.webPath }}</code>
+        </p>
+    {% elseif projet.provisioningStatus.value in ['pending', 'failed'] %}
+        <form method="post" action="{{ path('projet_provisionner', {id: projet.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('projet_provisionner_' ~ projet.id) }}">
+            <button type="submit">Provisionner</button>
+        </form>
+    {% endif %}
+
+    {% if projet.provisioningError %}
+        <p class="flash flash-danger">{{ projet.provisioningError }}</p>
+    {% endif %}
+
+    {% if projet.provisioningEvents|length > 0 %}
+        <h2>Journal de provisioning</h2>
+        <table>
+            <thead><tr><th>Étape</th><th>Action</th><th>Statut</th><th>Date</th><th>Détail</th></tr></thead>
+            <tbody>
+            {% for event in projet.provisioningEvents %}
+                <tr>
+                    <td>{{ event.step.value }}</td>
+                    <td>{{ event.action.value }}</td>
+                    <td><span class="badge">{{ event.status.value }}</span></td>
+                    <td>{{ event.occurredAt|date('d/m/Y H:i:s') }}</td>
+                    <td>{{ event.detail ?? '—' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+{% endblock %}

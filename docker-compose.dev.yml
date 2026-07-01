@@ -1,0 +1,22 @@
+# Environnement de dev jetable, à ne jamais confondre avec la vraie VM de TP.
+# - dashboard : sert l'application Symfony via le serveur PHP intégré.
+# - fake-vm   : conteneur Debian jouant le rôle de la VM de TP (sshd + agent
+#               tpagent monté en volume), utilisé pour développer/tester le
+#               provisioning sans jamais toucher un serveur réel.
+services:
+  dashboard:
+    image: php:8.1-cli
+    working_dir: /app
+    volumes:
+      - ./dashboard:/app
+    ports:
+      - "8080:8000"
+    command: php -S 0.0.0.0:8000 -t public
+
+  fake-vm:
+    build: ./tools/fake-vm
+    volumes:
+      - ./agent:/opt/tpagent
+    ports:
+      - "2222:22"
+      - "8000:8000"

@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ eleve.prenom }} {{ eleve.nom }} — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>{{ eleve.prenom }} {{ eleve.nom }}</h1>
+    <p>
+        Login : <code>{{ eleve.login }}</code>
+        {% if eleve.loginSuffix %}<span class="badge">suffixe {{ eleve.loginSuffix }}</span>{% endif %}<br>
+        Classe : <a href="{{ path('classe_show', {id: eleve.classe.id}) }}">{{ eleve.classe.nom }}</a><br>
+        {% if eleve.matricule %}Matricule : {{ eleve.matricule }}<br>{% endif %}
+    </p>
+
+    <h2>Projets</h2>
+    {% if eleve.projets|length == 0 %}
+        <p>Aucun projet pour le moment.</p>
+    {% else %}
+        <table>
+            <thead><tr><th>Nom</th><th>Moteur BDD</th><th>Statut</th></tr></thead>
+            <tbody>
+            {% for projet in eleve.projets %}
+                <tr>
+                    <td><a href="{{ path('projet_show', {id: projet.id}) }}">{{ projet.nom }}</a></td>
+                    <td>{{ projet.dbEngine.value }}</td>
+                    <td><span class="badge">{{ projet.provisioningStatus.value }}</span></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <p><a class="btn" href="{{ path('projet_new', {id: eleve.id}) }}">Nouveau projet</a></p>
+{% endblock %}

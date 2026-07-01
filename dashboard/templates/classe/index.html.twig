@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Classes — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>Classes</h1>
+    {% if classes|length == 0 %}
+        <p>Aucune classe pour le moment.</p>
+    {% else %}
+        <table>
+            <thead><tr><th>Nom</th><th>Année scolaire</th><th>Élèves</th></tr></thead>
+            <tbody>
+            {% for classe in classes %}
+                <tr>
+                    <td><a href="{{ path('classe_show', {id: classe.id}) }}">{{ classe.nom }}</a></td>
+                    <td>{{ classe.anneeScolaire }}</td>
+                    <td>{{ classe.eleves|length }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+    <p><a class="btn" href="{{ path('classe_new') }}">Nouvelle classe</a></p>
+{% endblock %}

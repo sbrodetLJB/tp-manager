@@ -1,0 +1,29 @@
+# Dashboard (Symfony)
+/dashboard/vendor/
+/dashboard/var/
+/dashboard/.env.local
+/dashboard/.env.local.php
+/dashboard/.env.*.local
+/dashboard/public/bundles/
+
+# Agent (Python)
+/agent/.venv/
+/agent/**/__pycache__/
+/agent/**/*.egg-info/
+/agent/**/job_ledger.sqlite
+/agent/var/
+/agent/.pytest_cache/
+/agent/tpagent.env
+
+# Secrets — ne jamais committer un token d'agent ou une clé de chiffrement
+*.env.local
+secrets.local.*
+
+# Outils
+/tools/fake-vm/.tmp/
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

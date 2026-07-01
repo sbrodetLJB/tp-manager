@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Aperçu de l'import — TP Manager{% endblock %}
+
+{% block body %}
+    <h1>Aperçu de l'import dans {{ classe.nom }}</h1>
+    <p class="help">Rien n'est encore enregistré. Vérifiez les logins générés (gabarit « {{ namingPattern.label }} ») avant de confirmer.</p>
+
+    <table>
+        <thead><tr><th>Nom</th><th>Prénom</th><th>Matricule</th><th>Login proposé</th><th>Suffixe</th></tr></thead>
+        <tbody>
+        {% for assignment in assignments %}
+            <tr>
+                <td>{{ assignment.row.nom }}</td>
+                <td>{{ assignment.row.prenom }}</td>
+                <td>{{ assignment.row.matricule ?? '—' }}</td>
+                <td><code>{{ assignment.login }}</code></td>
+                <td>{{ assignment.suffix ?? '—' }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <p>{{ assignments|length }} élève(s) prêt(s) à être importé(s).</p>
+
+    <form method="post" action="{{ path('import_confirm', {id: classe.id}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('import_confirm_' ~ classe.id) }}">
+        <button type="submit">Confirmer l'import</button>
+        <a class="btn btn-secondary" href="{{ path('import_new', {id: classe.id}) }}">Annuler / recommencer</a>
+    </form>
+{% endblock %}

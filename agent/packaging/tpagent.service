@@ -1,0 +1,23 @@
+[Unit]
+Description=tpagent - agent de provisioning TP Manager
+After=network.target
+
+[Service]
+Type=simple
+User=tpagent
+Group=tpagent
+WorkingDirectory=/opt/tpagent
+EnvironmentFile=-/opt/tpagent/tpagent.env
+ExecStart=/opt/tpagent/.venv/bin/uvicorn tpagent.main:app --app-dir /opt/tpagent/src --host 0.0.0.0 --port 8443
+Restart=on-failure
+
+# Durcissement : même en cas de RCE dans le process FastAPI, celui-ci ne peut
+# qu'invoquer les 6 scripts sudoers fixes, pas lire des fichiers root arbitraires.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/opt/tpagent/job_ledger.sqlite /opt/tpagent/var
+
+[Install]
+WantedBy=multi-user.target
