@@ -32,15 +32,22 @@
         <p>Aucun élève dans cette classe.</p>
     {% else %}
         <table>
-            <thead><tr><th>Nom</th><th>Prénom</th><th>Login</th><th>Suffixe</th><th>Projets</th></tr></thead>
+            <thead><tr><th>Nom</th><th>Prénom</th><th>Login</th><th>Suffixe</th><th>Projets provisionnés</th></tr></thead>
             <tbody>
             {% for eleve in classe.eleves %}
+                {% set total = eleve.projets|length %}
+                {% set provisionnes = eleve.projets|filter(p => p.provisioningStatus.value == 'provisioned')|length %}
                 <tr>
                     <td>{{ eleve.nom }}</td>
                     <td>{{ eleve.prenom }}</td>
                     <td><a href="{{ path('eleve_show', {id: eleve.id}) }}"><code>{{ eleve.login }}</code></a></td>
                     <td>{{ eleve.loginSuffix ?? '—' }}</td>
-                    <td>{{ eleve.projets|length }}</td>
+                    <td>
+                        {{ provisionnes }} / {{ total }}
+                        {% if total > 0 %}
+                            <span class="badge">{{ provisionnes == total ? 'complet' : 'incomplet' }}</span>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
