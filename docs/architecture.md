@@ -58,8 +58,9 @@ Installé comme service systemd sur la VM de TP. Seul composant à détenir des
 privilèges système, via un utilisateur dédié non-root (`tpagent`) et des
 scripts sudo à chemin fixe. Expose une API REST (`/health`, `/v1/config`,
 `/v1/linux-accounts`, `/v1/databases`, `/v1/webroots`, chacune en `POST`
-idempotent et `DELETE` idempotent) décrite dans
-[contracts/openapi.yaml](../contracts/openapi.yaml).
+idempotent et `DELETE` idempotent, plus `POST .../reset-password` sur les
+comptes Linux et bases de données pour changer un secret sans reprovisionner)
+décrite dans [contracts/openapi.yaml](../contracts/openapi.yaml).
 
 Le provisioning de base de données est écrit derrière une interface commune
 (`DbProvisioner`) implémentée à la fois pour MySQL/MariaDB et PostgreSQL, le

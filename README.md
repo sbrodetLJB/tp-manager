@@ -7,7 +7,7 @@ automatique — pour chaque projet d'élève — d'une base de données dédiée
 utilisateur BDD scoppé, d'un compte SSH/SFTP restreint, et d'un espace de dépôt
 web sous `/var/www/html/<nom_eleve>/<projet>/...`.
 
-> Statut : les 5 phases de développement (scaffolding, CRUD, provisioning MySQL,
+> Statut : les 6 phases de développement (scaffolding, CRUD, provisioning MySQL,
 > PostgreSQL + SFTP durci, assistant de configuration, déprovisioning + actions
 > de masse) sont implémentées et vérifiées de bout en bout contre une VM
 > jetable (`tools/fake-vm/`). Voir [docs/architecture.md](docs/architecture.md).

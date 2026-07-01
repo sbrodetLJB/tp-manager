@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="TPAGENT_")
 
-    contract_version: str = "v1"
+    contract_version: str = "v1.1"
     db_engine: str = "mysql"
     web_root_base: str = "/var/www/html"
     bearer_token: str = ""

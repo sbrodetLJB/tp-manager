@@ -204,6 +204,7 @@ succès no-op) — pas besoin de journal dédié pour ceux-là.
 ## CSRF
 
 Toutes les actions de mutation du dashboard (formulaires Symfony et actions
-HTML brutes comme "Activer un gabarit" ou "Provisionner") sont protégées par
-un jeton CSRF (`framework.csrf_protection: true`, vérifié explicitement dans
-les contrôleurs pour les formulaires non gérés par le composant Form).
+HTML brutes comme "Activer" un gabarit de nommage ou "Provisionner") sont
+protégées par un jeton CSRF (`framework.csrf_protection: true`, vérifié
+explicitement dans les contrôleurs pour les formulaires non gérés par le
+composant Form).

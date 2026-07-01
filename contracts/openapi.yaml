@@ -6,7 +6,7 @@ info:
     est le seul client de cette API. Source de vérité partagée entre le client
     (dashboard/src/Service/Agent) et le serveur (agent/src/tpagent/api) — toute
     évolution du contrat doit être faite ici en premier.
-  version: "v1"
+  version: "v1.1"
 servers:
   - url: https://{host}:{port}
     variables:
