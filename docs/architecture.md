@@ -42,7 +42,10 @@ de :
 - la gestion des classes, élèves (import CSV + convention de nommage
   configurable) et projets ;
 - l'orchestration du provisioning (appelle l'agent dans l'ordre : compte
-  Linux → base de données → dossier web) et le suivi de son état ;
+  Linux → base de données → dossier web) et du déprovisioning (ordre inverse)
+  et le suivi de leur état ;
+- les actions de masse par classe (provisionner/déprovisionner tous les
+  projets éligibles en une fois, avec résultat détaillé par élève) ;
 - la distribution des identifiants générés (affichage à usage unique).
 
 Persistance : SQLite (`dashboard/var/data_*.db`) — c'est le stockage propre à
@@ -53,9 +56,10 @@ avec le moteur BDD choisi pour les projets des élèves sur la VM de TP.
 
 Installé comme service systemd sur la VM de TP. Seul composant à détenir des
 privilèges système, via un utilisateur dédié non-root (`tpagent`) et des
-scripts sudo à chemin fixe. Expose une API REST (`/health`, puis à partir de
-la Phase 2 : `/v1/config`, `/v1/linux-accounts`, `/v1/databases`,
-`/v1/webroots`) décrite dans [contracts/openapi.yaml](../contracts/openapi.yaml).
+scripts sudo à chemin fixe. Expose une API REST (`/health`, `/v1/config`,
+`/v1/linux-accounts`, `/v1/databases`, `/v1/webroots`, chacune en `POST`
+idempotent et `DELETE` idempotent) décrite dans
+[contracts/openapi.yaml](../contracts/openapi.yaml).
 
 Le provisioning de base de données est écrit derrière une interface commune
 (`DbProvisioner`) implémentée à la fois pour MySQL/MariaDB et PostgreSQL, le
