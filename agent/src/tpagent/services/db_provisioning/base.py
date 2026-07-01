@@ -19,5 +19,12 @@ class DbProvisioner(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def reset_password(self, db_name: str, db_user: str, db_password: str) -> bool:
+        """Change le mot de passe de l'utilisateur, sans toucher à la base ni
+        aux GRANT existants. Retourne True si l'utilisateur n'existait pas
+        (à traiter comme 404 côté API)."""
+        raise NotImplementedError
+
+    @abstractmethod
     def engine_version(self) -> str:
         raise NotImplementedError

@@ -17,5 +17,11 @@ class PostgresProvisioner(DbProvisioner):
         _stdout, already_gone = run_privileged_script("tpagent-postgres-provision.sh", "drop", db_name, db_user)
         return already_gone
 
+    def reset_password(self, db_name: str, db_user: str, db_password: str) -> bool:
+        _stdout, not_found = run_privileged_script(
+            "tpagent-postgres-provision.sh", "reset-password", db_name, db_user, db_password
+        )
+        return not_found
+
     def engine_version(self) -> str:
         return "unknown"

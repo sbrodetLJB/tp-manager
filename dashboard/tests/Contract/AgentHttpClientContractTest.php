@@ -4,7 +4,9 @@ namespace App\Tests\Contract;
 
 use App\Entity\AgentConnection;
 use App\Service\Agent\AgentHttpClient;
+use App\Service\Agent\Dto\DatabasePasswordResetRequest;
 use App\Service\Agent\Dto\DatabaseRequest;
+use App\Service\Agent\Dto\LinuxAccountPasswordResetRequest;
 use App\Service\Agent\Dto\LinuxAccountRequest;
 use App\Service\Agent\Dto\WebrootRequest;
 use App\Service\Security\AgentTokenEncryptor;
@@ -89,6 +91,86 @@ final class AgentHttpClientContractTest extends TestCase
 
         $this->assertRequestBodyHasRequiredFields($captured, 'WebrootCreateRequest');
         $this->assertResponseHasRequiredFields($response, 'WebrootResponse');
+    }
+
+    public function testResetLinuxAccountPasswordSendsAllRequiredContractFields(): void
+    {
+        $captured = null;
+        $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$captured) {
+            $captured = $options;
+            self::assertSame('POST', $method);
+            self::assertSame('https://tp-vm.local:8000/v1/linux-accounts/dupont2/reset-password', $url);
+
+            return new MockResponse(json_encode(['username' => 'dupont2', 'status' => 'reset']), ['http_code' => 200]);
+        });
+
+        $client = new AgentHttpClient($httpClient, new AgentTokenEncryptor('test-secret'));
+        $client->resetLinuxAccountPassword(
+            $this->makeConnection(),
+            'dupont2',
+            new LinuxAccountPasswordResetRequest('req-5', 'password', 'new-secret'),
+        );
+
+        $this->assertRequestBodyHasRequiredFields($captured, 'LinuxAccountPasswordResetRequest');
+    }
+
+    public function testResetLinuxAccountPasswordNotFoundIsMappedToAgentException(): void
+    {
+        $httpClient = new MockHttpClient(fn () => new MockResponse(
+            json_encode(['errorCode' => 'USER_NOT_FOUND', 'message' => 'Utilisateur introuvable.']),
+            ['http_code' => 404],
+        ));
+
+        $client = new AgentHttpClient($httpClient, new AgentTokenEncryptor('test-secret'));
+
+        try {
+            $client->resetLinuxAccountPassword($this->makeConnection(), 'dupont2', new LinuxAccountPasswordResetRequest('req-6', 'password', 'new-secret'));
+            self::fail('Une AgentException était attendue.');
+        } catch (\App\Service\Agent\AgentException $e) {
+            self::assertSame('USER_NOT_FOUND', $e->errorCode);
+            self::assertSame(404, $e->getHttpStatusCode());
+        }
+    }
+
+    public function testResetDatabasePasswordSendsAllRequiredContractFields(): void
+    {
+        $captured = null;
+        $httpClient = new MockHttpClient(function (string $method, string $url, array $options) use (&$captured) {
+            $captured = $options;
+            self::assertSame('POST', $method);
+            self::assertSame('https://tp-vm.local:8000/v1/databases/dupont2_sitevitrine/reset-password', $url);
+
+            return new MockResponse(json_encode([
+                'dbName' => 'dupont2_sitevitrine', 'dbUser' => 'dupont2_sitevitrine', 'status' => 'reset',
+            ]), ['http_code' => 200]);
+        });
+
+        $client = new AgentHttpClient($httpClient, new AgentTokenEncryptor('test-secret'));
+        $client->resetDatabasePassword(
+            $this->makeConnection(),
+            'dupont2_sitevitrine',
+            new DatabasePasswordResetRequest('req-7', 'new-secret'),
+        );
+
+        $this->assertRequestBodyHasRequiredFields($captured, 'DatabasePasswordResetRequest');
+    }
+
+    public function testResetDatabasePasswordNotFoundIsMappedToAgentException(): void
+    {
+        $httpClient = new MockHttpClient(fn () => new MockResponse(
+            json_encode(['errorCode' => 'DB_NOT_FOUND', 'message' => 'Base introuvable.']),
+            ['http_code' => 404],
+        ));
+
+        $client = new AgentHttpClient($httpClient, new AgentTokenEncryptor('test-secret'));
+
+        try {
+            $client->resetDatabasePassword($this->makeConnection(), 'dupont2_sitevitrine', new DatabasePasswordResetRequest('req-8', 'new-secret'));
+            self::fail('Une AgentException était attendue.');
+        } catch (\App\Service\Agent\AgentException $e) {
+            self::assertSame('DB_NOT_FOUND', $e->errorCode);
+            self::assertSame(404, $e->getHttpStatusCode());
+        }
     }
 
     public function testErrorResponseIsMappedToAgentException(): void

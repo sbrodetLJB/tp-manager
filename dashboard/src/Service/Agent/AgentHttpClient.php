@@ -4,8 +4,10 @@ namespace App\Service\Agent;
 
 use App\Entity\AgentConnection;
 use App\Service\Agent\Dto\AgentConfig;
+use App\Service\Agent\Dto\DatabasePasswordResetRequest;
 use App\Service\Agent\Dto\DatabaseRequest;
 use App\Service\Agent\Dto\DatabaseResponse;
+use App\Service\Agent\Dto\LinuxAccountPasswordResetRequest;
 use App\Service\Agent\Dto\LinuxAccountRequest;
 use App\Service\Agent\Dto\LinuxAccountResponse;
 use App\Service\Agent\Dto\WebrootRequest;
@@ -47,6 +49,16 @@ final class AgentHttpClient implements AgentClientInterface
         return WebrootResponse::fromArray(
             $this->request($connection, 'POST', '/v1/webroots', $request->toArray())
         );
+    }
+
+    public function resetLinuxAccountPassword(AgentConnection $connection, string $username, LinuxAccountPasswordResetRequest $request): void
+    {
+        $this->request($connection, 'POST', '/v1/linux-accounts/'.rawurlencode($username).'/reset-password', $request->toArray());
+    }
+
+    public function resetDatabasePassword(AgentConnection $connection, string $dbName, DatabasePasswordResetRequest $request): void
+    {
+        $this->request($connection, 'POST', '/v1/databases/'.rawurlencode($dbName).'/reset-password', $request->toArray());
     }
 
     public function deleteLinuxAccount(AgentConnection $connection, string $username, bool $purgeHome): void

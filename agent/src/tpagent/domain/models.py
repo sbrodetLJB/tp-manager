@@ -67,9 +67,32 @@ class LinuxAccountDeleteResponse(BaseModel):
     status: Literal["deleted"]
 
 
+class LinuxAccountPasswordResetRequest(BaseModel):
+    requestId: str
+    authMethod: Literal["password", "public_key"]
+    password: Optional[str] = None
+    publicKey: Optional[str] = None
+
+
+class LinuxAccountPasswordResetResponse(BaseModel):
+    username: str
+    status: Literal["reset"]
+
+
 class DatabaseDeleteResponse(BaseModel):
     dbName: str
     status: Literal["deleted"]
+
+
+class DatabasePasswordResetRequest(BaseModel):
+    requestId: str
+    dbPassword: str
+
+
+class DatabasePasswordResetResponse(BaseModel):
+    dbName: str
+    dbUser: str
+    status: Literal["reset"]
 
 
 class WebrootDeleteRequest(BaseModel):

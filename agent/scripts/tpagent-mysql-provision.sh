@@ -1,6 +1,7 @@
 #!/bin/sh
-# Usage: tpagent-mysql-provision.sh create <db_name> <db_user> <db_password> [charset]
-#        tpagent-mysql-provision.sh drop   <db_name> <db_user>
+# Usage: tpagent-mysql-provision.sh create         <db_name> <db_user> <db_password> [charset]
+#        tpagent-mysql-provision.sh drop           <db_name> <db_user>
+#        tpagent-mysql-provision.sh reset-password <db_name> <db_user> <db_password>
 #
 # Utilise l'authentification unix_socket de root (aucun mot de passe root
 # MySQL stocké nulle part) — voir docs/security.md.
@@ -66,8 +67,25 @@ case "$action" in
         mysql -e "FLUSH PRIVILEGES;"
         exit 0
         ;;
+    reset-password)
+        db_password="$4"
+
+        user_exists=$(mysql -N -B -e "SELECT COUNT(*) FROM mysql.user WHERE User = '$db_user' AND Host = 'localhost'")
+        if [ "$user_exists" -eq 0 ]; then
+            log "L'utilisateur $db_user n'existe pas : impossible de réinitialiser son mot de passe."
+            exit 2
+        fi
+
+        escaped_password=$(printf '%s' "$db_password" | sed "s/\\\\/\\\\\\\\/g; s/'/\\\\'/g")
+
+        # ALTER USER change uniquement le secret d'authentification : ne
+        # touche ni à la base ni aux GRANT déjà accordés — voir docs/security.md.
+        mysql -e "ALTER USER '$db_user'@'localhost' IDENTIFIED BY '$escaped_password';"
+        mysql -e "FLUSH PRIVILEGES;"
+        exit 0
+        ;;
     *)
-        log "Action inconnue : $action (attendu: create|drop)"
+        log "Action inconnue : $action (attendu: create|drop|reset-password)"
         exit 1
         ;;
 esac

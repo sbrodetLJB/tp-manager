@@ -17,6 +17,18 @@
             Base de données : <code>{{ projet.dbName }}</code><br>
             Dépôt web : <code>{{ projet.webPath }}</code>
         </p>
+        <form method="post" action="{{ path('projet_reinitialiser_identifiants', {id: projet.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('projet_reinitialiser_identifiants_' ~ projet.id) }}">
+            {% if projet.sshAuthMethod.value == 'public_key' %}
+                <div class="row">
+                    <label for="resetPublicKey">Nouvelle clé publique SSH de l'élève</label>
+                    <textarea id="resetPublicKey" name="publicKey" rows="3" style="width:100%;max-width:600px" placeholder="ssh-ed25519 AAAA... eleve@laptop" required></textarea>
+                </div>
+            {% endif %}
+            <button type="submit" class="btn-secondary">Réinitialiser les identifiants</button>
+        </form>
+        <p class="help">Génère un nouveau mot de passe (compte SFTP + base de données) sans toucher aux fichiers déjà déposés ni aux données déjà en base — à utiliser si l'élève a perdu son mot de passe.</p>
+
         <form method="post" action="{{ path('projet_deprovisionner', {id: projet.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('projet_deprovisionner_' ~ projet.id) }}">
             <button type="submit" class="btn-secondary">Déprovisionner</button>

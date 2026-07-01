@@ -37,6 +37,17 @@ durcissement supplémentaire : `NoNewPrivileges`, `ProtectSystem=strict`,
 nécessaire (journal d'idempotence, logs). Un RCE dans le process FastAPI reste
 ainsi borné aux 6 scripts listés, sans accès direct au reste du système.
 
+Chacun de ces scripts expose une action `reset-password` en plus de
+`create`/`drop` (`tpagent-create-linux-user.sh`, `tpagent-mysql-provision.sh`,
+`tpagent-postgres-provision.sh`) : elle change uniquement le secret
+d'authentification (mot de passe/clé publique côté Linux, `ALTER
+USER`/`ALTER ROLE` côté BDD) d'un compte **déjà existant**, sans jamais
+toucher au home, aux fichiers déjà déposés, à la base ou aux GRANT déjà
+accordés. C'est le seul moyen sûr de récupérer un projet dont l'élève a perdu
+son mot de passe — l'alternative (déprovisionner puis reprovisionner)
+détruirait ses données. Voir `ProjectCredentialResetService` côté dashboard
+et le bouton "Réinitialiser les identifiants" sur la page d'un projet.
+
 ## Anti-injection
 
 Deux couches distinctes, avec des rôles différents :

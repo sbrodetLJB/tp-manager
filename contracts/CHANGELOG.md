@@ -14,3 +14,18 @@
 Le contrat est stable depuis la Phase 5 (déprovisioning). Toute évolution
 future se fait d'abord dans `openapi.yaml`, puis côté client
 (`dashboard/src/Service/Agent`) et serveur (`agent/src/tpagent/api`).
+
+## v1.1
+
+- `POST /v1/linux-accounts/{username}/reset-password` — change le secret
+  d'authentification (mot de passe ou clé publique) d'un compte existant sans
+  toucher au home ni aux fichiers déjà déposés par l'élève (404 si le compte
+  n'existe pas).
+- `POST /v1/databases/{dbName}/reset-password` — change le mot de passe de
+  l'utilisateur BDD sans toucher à la base ni aux GRANT déjà accordés (404 si
+  l'utilisateur n'existe pas).
+
+Motivation : le seul moyen de récupérer un projet dont l'élève a perdu son mot
+de passe était jusque-là déprovisionner puis reprovisionner, ce qui détruit
+ses fichiers déposés et sa base de données. Ces deux endpoints permettent une
+réinitialisation non destructive.

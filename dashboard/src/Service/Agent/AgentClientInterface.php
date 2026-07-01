@@ -4,8 +4,10 @@ namespace App\Service\Agent;
 
 use App\Entity\AgentConnection;
 use App\Service\Agent\Dto\AgentConfig;
+use App\Service\Agent\Dto\DatabasePasswordResetRequest;
 use App\Service\Agent\Dto\DatabaseRequest;
 use App\Service\Agent\Dto\DatabaseResponse;
+use App\Service\Agent\Dto\LinuxAccountPasswordResetRequest;
 use App\Service\Agent\Dto\LinuxAccountRequest;
 use App\Service\Agent\Dto\LinuxAccountResponse;
 use App\Service\Agent\Dto\WebrootRequest;
@@ -24,6 +26,19 @@ interface AgentClientInterface
     public function createDatabase(AgentConnection $connection, DatabaseRequest $request): DatabaseResponse;
 
     public function createWebroot(AgentConnection $connection, WebrootRequest $request): WebrootResponse;
+
+    /**
+     * Change le secret d'authentification d'un compte existant. Contrairement
+     * aux méthodes delete*, un 404 ici est une vraie erreur (le compte est
+     * censé exister) et n'est donc jamais avalé : lève toujours AgentException.
+     */
+    public function resetLinuxAccountPassword(AgentConnection $connection, string $username, LinuxAccountPasswordResetRequest $request): void;
+
+    /**
+     * Change le mot de passe d'un utilisateur BDD existant. Même remarque que
+     * resetLinuxAccountPassword sur le traitement du 404.
+     */
+    public function resetDatabasePassword(AgentConnection $connection, string $dbName, DatabasePasswordResetRequest $request): void;
 
     /**
      * Idempotent : ne lève pas si le compte n'existe déjà plus (404 agent = no-op).

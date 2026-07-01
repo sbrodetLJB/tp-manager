@@ -119,6 +119,68 @@ def test_delete_linux_account_not_found_returns_404():
     assert response.json()["errorCode"] == "USER_NOT_FOUND"
 
 
+def test_reset_linux_account_password_matches_contract():
+    with patch("tpagent.api.linux_accounts.reset_linux_account_password", return_value=False):
+        response = TestClient(app).post(
+            "/v1/linux-accounts/dupont2/reset-password",
+            headers=AUTH_HEADERS,
+            json={
+                "requestId": str(uuid.uuid4()),
+                "authMethod": "password",
+                "password": "Nv82rKp5Qz73mTx1",
+            },
+        )
+
+    assert response.status_code == 200
+    _assert_matches_schema(response.json(), "LinuxAccountPasswordResetResponse")
+
+
+def test_reset_linux_account_password_not_found_returns_404():
+    with patch("tpagent.api.linux_accounts.reset_linux_account_password", return_value=True):
+        response = TestClient(app).post(
+            "/v1/linux-accounts/dupont2/reset-password",
+            headers=AUTH_HEADERS,
+            json={
+                "requestId": str(uuid.uuid4()),
+                "authMethod": "password",
+                "password": "Nv82rKp5Qz73mTx1",
+            },
+        )
+
+    assert response.status_code == 404
+    _assert_matches_schema(response.json(), "ErrorResponse")
+    assert response.json()["errorCode"] == "USER_NOT_FOUND"
+
+
+def test_reset_database_password_matches_contract():
+    with patch("tpagent.api.databases.get_provisioner") as mock_get_provisioner:
+        mock_get_provisioner.return_value.reset_password.return_value = False
+
+        response = TestClient(app).post(
+            "/v1/databases/dupont2_sitevitrine/reset-password",
+            headers=AUTH_HEADERS,
+            json={"requestId": str(uuid.uuid4()), "dbPassword": "Nv82rKp5Qz73mTx1"},
+        )
+
+    assert response.status_code == 200
+    _assert_matches_schema(response.json(), "DatabasePasswordResetResponse")
+
+
+def test_reset_database_password_not_found_returns_404():
+    with patch("tpagent.api.databases.get_provisioner") as mock_get_provisioner:
+        mock_get_provisioner.return_value.reset_password.return_value = True
+
+        response = TestClient(app).post(
+            "/v1/databases/dupont2_sitevitrine/reset-password",
+            headers=AUTH_HEADERS,
+            json={"requestId": str(uuid.uuid4()), "dbPassword": "Nv82rKp5Qz73mTx1"},
+        )
+
+    assert response.status_code == 404
+    _assert_matches_schema(response.json(), "ErrorResponse")
+    assert response.json()["errorCode"] == "DB_NOT_FOUND"
+
+
 def test_delete_database_matches_contract():
     with patch("tpagent.api.databases.get_provisioner") as mock_get_provisioner:
         mock_get_provisioner.return_value.drop_database_and_user.return_value = False

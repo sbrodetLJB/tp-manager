@@ -6,6 +6,7 @@ use App\Entity\Eleve;
 use App\Entity\Projet;
 use App\Form\ProjetType;
 use App\Service\Provisioning\CredentialRevealTokenManager;
+use App\Service\Provisioning\ProjectCredentialResetService;
 use App\Service\Provisioning\ProjectDeprovisioningOrchestrator;
 use App\Service\Provisioning\ProjectProvisioningOrchestrator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -68,6 +69,37 @@ class ProjetController extends AbstractController
 
         if (!$result->success) {
             $this->addFlash('danger', "Provisioning échoué : {$result->errorMessage}");
+
+            return $this->redirectToRoute('projet_show', ['id' => $projet->getId()]);
+        }
+
+        $reveal = $credentialRevealTokenManager->create($projet, [
+            'linuxPassword' => $result->linuxPassword,
+            'dbPassword' => $result->dbPassword,
+        ]);
+
+        return $this->redirectToRoute('credential_reveal', [
+            'id' => $projet->getId(),
+            'revealToken' => $reveal->getRevealToken(),
+        ]);
+    }
+
+    #[Route('/projets/{id}/reinitialiser-identifiants', name: 'projet_reinitialiser_identifiants', methods: ['POST'])]
+    public function reinitialiserIdentifiants(
+        Projet $projet,
+        Request $request,
+        ProjectCredentialResetService $resetService,
+        CredentialRevealTokenManager $credentialRevealTokenManager,
+    ): Response {
+        if (!$this->isCsrfTokenValid('projet_reinitialiser_identifiants_'.$projet->getId(), $request->request->get('_token'))) {
+            throw new BadRequestHttpException('Jeton CSRF invalide.');
+        }
+
+        $publicKey = $request->request->get('publicKey');
+        $result = $resetService->reset($projet, is_string($publicKey) ? $publicKey : null);
+
+        if (!$result->success) {
+            $this->addFlash('danger', "Réinitialisation des identifiants échouée : {$result->errorMessage}");
 
             return $this->redirectToRoute('projet_show', ['id' => $projet->getId()]);
         }

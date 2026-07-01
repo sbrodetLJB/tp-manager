@@ -1,6 +1,7 @@
 #!/bin/sh
-# Usage: tpagent-postgres-provision.sh create <db_name> <db_user> <db_password>
-#        tpagent-postgres-provision.sh drop   <db_name> <db_user>
+# Usage: tpagent-postgres-provision.sh create         <db_name> <db_user> <db_password>
+#        tpagent-postgres-provision.sh drop           <db_name> <db_user>
+#        tpagent-postgres-provision.sh reset-password <db_name> <db_user> <db_password>
 #
 # Utilise l'authentification "peer" du rôle système postgres (aucun mot de
 # passe superuser PostgreSQL stocké nulle part) — voir docs/security.md.
@@ -60,8 +61,24 @@ case "$action" in
         fi
         exit 0
         ;;
+    reset-password)
+        db_password="$4"
+
+        user_exists=$(run_psql "SELECT 1 FROM pg_roles WHERE rolname='$db_user';" | tr -d '[:space:]')
+        if [ "$user_exists" != "1" ]; then
+            log "Le rôle $db_user n'existe pas : impossible de réinitialiser son mot de passe."
+            exit 2
+        fi
+
+        escaped_password=$(printf '%s' "$db_password" | sed "s/\\\\/\\\\\\\\/g; s/'/\\\\'/g")
+
+        # ALTER ROLE change uniquement le secret d'authentification : ne
+        # touche ni à la base ni à son ownership — voir docs/security.md.
+        run_psql "ALTER ROLE \"$db_user\" LOGIN PASSWORD '$escaped_password';"
+        exit 0
+        ;;
     *)
-        log "Action inconnue : $action (attendu: create|drop)"
+        log "Action inconnue : $action (attendu: create|drop|reset-password)"
         exit 1
         ;;
 esac

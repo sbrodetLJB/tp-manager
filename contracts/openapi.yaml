@@ -94,6 +94,39 @@ paths:
         "404":
           $ref: "#/components/responses/Error"
 
+  /v1/linux-accounts/{username}/reset-password:
+    post:
+      summary: >
+        Change le secret d'authentification (mot de passe ou clé publique) d'un
+        compte Linux existant, sans toucher au home ni aux fichiers déjà
+        déposés par l'élève.
+      operationId: resetLinuxAccountPassword
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LinuxAccountPasswordResetRequest"
+      responses:
+        "200":
+          description: Secret réinitialisé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinuxAccountPasswordResetResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/Error"
+        "422":
+          $ref: "#/components/responses/Error"
+
   /v1/databases:
     post:
       summary: Crée une base de données et un utilisateur scoppé à cette base
@@ -141,6 +174,38 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
         "404":
+          $ref: "#/components/responses/Error"
+
+  /v1/databases/{dbName}/reset-password:
+    post:
+      summary: >
+        Change le mot de passe de l'utilisateur BDD scoppé à ce projet, sans
+        toucher à la base ni aux GRANT déjà accordés.
+      operationId: resetDatabasePassword
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: dbName
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DatabasePasswordResetRequest"
+      responses:
+        "200":
+          description: Mot de passe réinitialisé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatabasePasswordResetResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/Error"
+        "422":
           $ref: "#/components/responses/Error"
 
   /v1/webroots:
@@ -249,6 +314,22 @@ components:
         homeDir: { type: string }
         status: { type: string, enum: [created, already_exists] }
 
+    LinuxAccountPasswordResetRequest:
+      type: object
+      required: [requestId, authMethod]
+      properties:
+        requestId: { type: string, format: uuid }
+        authMethod: { type: string, enum: [password, public_key] }
+        password: { type: string }
+        publicKey: { type: string }
+
+    LinuxAccountPasswordResetResponse:
+      type: object
+      required: [username, status]
+      properties:
+        username: { type: string }
+        status: { type: string, enum: [reset] }
+
     DatabaseCreateRequest:
       type: object
       required: [requestId, dbName, dbUser, dbPassword]
@@ -268,6 +349,21 @@ components:
         dbUser: { type: string }
         grantsScope: { type: string, enum: [database-only] }
         status: { type: string, enum: [created, already_exists] }
+
+    DatabasePasswordResetRequest:
+      type: object
+      required: [requestId, dbPassword]
+      properties:
+        requestId: { type: string, format: uuid }
+        dbPassword: { type: string }
+
+    DatabasePasswordResetResponse:
+      type: object
+      required: [dbName, dbUser, status]
+      properties:
+        dbName: { type: string }
+        dbUser: { type: string }
+        status: { type: string, enum: [reset] }
 
     WebrootCreateRequest:
       type: object

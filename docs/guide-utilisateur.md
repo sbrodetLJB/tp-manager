@@ -194,7 +194,27 @@ secondes. Le résultat détaillé (réussi/échec/ignoré, avec le message d'err
 le cas échéant) s'affiche une fois le lot terminé — un échec sur un élève
 n'empêche pas les autres d'être traités.
 
-## 10. En cas d'échec de provisioning
+## 10. Un élève a perdu son mot de passe
+
+Sur la page d'un projet **provisionné**, le bouton **Réinitialiser les
+identifiants** génère un nouveau mot de passe (compte SFTP et utilisateur de
+la base de données) sans jamais toucher aux fichiers déjà déposés ni aux
+données déjà en base. C'est la seule méthode sûre : contrairement à un
+déprovisionnement suivi d'un reprovisionnement, elle ne détruit rien.
+
+- **Authentification par mot de passe** : cliquez simplement sur le bouton,
+  les deux nouveaux mots de passe sont générés côté agent.
+- **Authentification par clé publique** : collez la nouvelle clé de l'élève
+  avant de valider (comme au provisioning initial) — seule son empreinte est
+  mise à jour, la clé elle-même n'est jamais enregistrée.
+
+Comme lors du provisioning initial, vous êtes redirigé vers la page
+d'identifiants à **affichage unique** : notez ou transmettez les nouveaux
+mots de passe immédiatement.
+
+![Bouton "Réinitialiser les identifiants" sur la page d'un projet provisionné](screenshots/12-reinitialiser-identifiants.png)
+
+## 11. En cas d'échec de provisioning
 
 Sur la page d'un projet en échec :
 - **Réessayer le provisioning** — sûr à cliquer autant de fois que nécessaire
@@ -205,7 +225,7 @@ Sur la page d'un projet en échec :
   si certaines sont déjà parties, pour repartir d'un état propre avant de
   réessayer.
 
-## 11. Dépannage / FAQ
+## 12. Dépannage / FAQ
 
 **"Agent injoignable" lors de la configuration ou du provisioning**
 Vérifiez que le service `tpagent` tourne sur la VM (`systemctl status
@@ -222,9 +242,11 @@ de l'agent). Corrigez l'un des deux avant de continuer.
 **Un élève ne peut pas se connecter en SFTP**
 Vérifiez que son compte a bien été provisionné (statut "provisioned" sur la
 page du projet) et que l'identifiant/mot de passe transmis correspond bien à
-la dernière consultation de la fiche identifiants. Voir aussi
-[security.md](security.md) pour le détail du confinement chroot (l'élève ne
-peut accéder qu'à son propre dossier de projet).
+la dernière consultation de la fiche identifiants. S'il a simplement perdu son
+mot de passe, voir la section 10 ("Un élève a perdu son mot de passe") plutôt
+que de déprovisionner. Voir aussi [security.md](security.md) pour le détail
+du confinement chroot (l'élève ne peut accéder qu'à son propre dossier de
+projet).
 
 **J'ai perdu le jeton de l'agent**
 Le jeton n'est affiché qu'une fois par `install.sh`. Voir

@@ -6,8 +6,10 @@ use App\Entity\AgentConnection;
 use App\Service\Agent\AgentClientInterface;
 use App\Service\Agent\AgentException;
 use App\Service\Agent\Dto\AgentConfig;
+use App\Service\Agent\Dto\DatabasePasswordResetRequest;
 use App\Service\Agent\Dto\DatabaseRequest;
 use App\Service\Agent\Dto\DatabaseResponse;
+use App\Service\Agent\Dto\LinuxAccountPasswordResetRequest;
 use App\Service\Agent\Dto\LinuxAccountRequest;
 use App\Service\Agent\Dto\LinuxAccountResponse;
 use App\Service\Agent\Dto\WebrootRequest;
@@ -37,6 +39,14 @@ final class FakeAgentClient implements AgentClientInterface
      * @var array<int, string>
      */
     public array $failForDbNames = [];
+
+    /** @var array<int, array{username: string, requestId: string, authMethod: string, password: ?string, publicKey: ?string}> */
+    public array $resetLinuxAccountCalls = [];
+
+    /** @var array<int, array{dbName: string, requestId: string, dbPassword: string}> */
+    public array $resetDatabaseCalls = [];
+
+    public bool $failResetWithNotFound = false;
 
     public function getConfig(AgentConnection $connection): AgentConfig
     {
@@ -76,6 +86,34 @@ final class FakeAgentClient implements AgentClientInterface
             '2750',
             'created',
         );
+    }
+
+    public function resetLinuxAccountPassword(AgentConnection $connection, string $username, LinuxAccountPasswordResetRequest $request): void
+    {
+        if ($this->failResetWithNotFound) {
+            throw new AgentException('USER_NOT_FOUND', "Utilisateur \"$username\" introuvable (simulé).", 404);
+        }
+
+        $this->resetLinuxAccountCalls[] = [
+            'username' => $username,
+            'requestId' => $request->requestId,
+            'authMethod' => $request->authMethod,
+            'password' => $request->password,
+            'publicKey' => $request->publicKey,
+        ];
+    }
+
+    public function resetDatabasePassword(AgentConnection $connection, string $dbName, DatabasePasswordResetRequest $request): void
+    {
+        if ($this->failResetWithNotFound) {
+            throw new AgentException('DB_NOT_FOUND', "Base \"$dbName\" introuvable (simulé).", 404);
+        }
+
+        $this->resetDatabaseCalls[] = [
+            'dbName' => $dbName,
+            'requestId' => $request->requestId,
+            'dbPassword' => $request->dbPassword,
+        ];
     }
 
     public function deleteLinuxAccount(AgentConnection $connection, string $username, bool $purgeHome): void
