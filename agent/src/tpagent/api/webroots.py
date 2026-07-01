@@ -2,9 +2,15 @@ from fastapi import APIRouter, Depends
 
 from tpagent.auth import verify_bearer_token
 from tpagent.config import settings
-from tpagent.domain.models import WebrootCreateRequest, WebrootResponse
+from tpagent.domain.errors import WebrootNotFoundError
+from tpagent.domain.models import (
+    WebrootCreateRequest,
+    WebrootDeleteRequest,
+    WebrootDeleteResponse,
+    WebrootResponse,
+)
 from tpagent.services.job_ledger import JobLedger
-from tpagent.services.webroot_service import create_webroot
+from tpagent.services.webroot_service import create_webroot, delete_webroot
 from tpagent.util.sanitize import validate_linux_username, validate_path_segment
 
 router = APIRouter(dependencies=[Depends(verify_bearer_token)])
@@ -36,3 +42,16 @@ def post_webroot(payload: WebrootCreateRequest) -> WebrootResponse:
     )
     _ledger.record(payload.requestId, _ENDPOINT, payload_dict, 201, response.model_dump())
     return response
+
+
+@router.delete("/v1/webroots")
+def delete_webroot_endpoint(payload: WebrootDeleteRequest) -> WebrootDeleteResponse:
+    validate_linux_username(payload.eleveLogin, "eleveLogin")
+    validate_path_segment(payload.projetSlug, field_name="projetSlug")
+
+    already_gone = delete_webroot(payload.eleveLogin, payload.projetSlug, settings.web_root_base)
+    path = f"{settings.web_root_base}/{payload.eleveLogin}/{payload.projetSlug}"
+    if already_gone:
+        raise WebrootNotFoundError(f'Dépôt "{path}" introuvable (déjà supprimé).')
+
+    return WebrootDeleteResponse(path=path, status="deleted")

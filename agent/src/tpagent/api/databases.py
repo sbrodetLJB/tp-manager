@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 
 from tpagent.auth import verify_bearer_token
 from tpagent.config import settings
-from tpagent.domain.models import DatabaseCreateRequest, DatabaseResponse
+from tpagent.domain.errors import DatabaseNotFoundError
+from tpagent.domain.models import DatabaseCreateRequest, DatabaseDeleteResponse, DatabaseResponse
 from tpagent.services.db_provisioning.factory import get_provisioner
 from tpagent.services.job_ledger import JobLedger
 from tpagent.util.sanitize import validate_sql_identifier
@@ -36,3 +37,17 @@ def post_database(payload: DatabaseCreateRequest) -> DatabaseResponse:
     )
     _ledger.record(payload.requestId, _ENDPOINT, payload_dict, 201, response.model_dump())
     return response
+
+
+@router.delete("/v1/databases/{dbName}")
+def delete_database(dbName: str) -> DatabaseDeleteResponse:
+    validate_sql_identifier(dbName, "dbName")
+
+    # dbUser == dbName par convention (toujours vrai côté dashboard) : le
+    # contrat DELETE ne transporte que dbName, voir contracts/openapi.yaml.
+    provisioner = get_provisioner(settings.db_engine)
+    already_gone = provisioner.drop_database_and_user(dbName, dbName)
+    if already_gone:
+        raise DatabaseNotFoundError(f'Base "{dbName}" introuvable (déjà supprimée).')
+
+    return DatabaseDeleteResponse(dbName=dbName, status="deleted")

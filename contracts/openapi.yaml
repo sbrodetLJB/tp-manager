@@ -68,6 +68,32 @@ paths:
         "422":
           $ref: "#/components/responses/Error"
 
+  /v1/linux-accounts/{username}:
+    delete:
+      summary: Supprime un compte Linux (Phase 5 — déprovisioning)
+      operationId: deleteLinuxAccount
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+        - name: purgeHome
+          in: query
+          required: false
+          schema: { type: boolean, default: false }
+      responses:
+        "200":
+          description: Compte supprimé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LinuxAccountDeleteResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/Error"
+
   /v1/databases:
     post:
       summary: Crée une base de données et un utilisateur scoppé à cette base
@@ -95,6 +121,28 @@ paths:
         "500":
           $ref: "#/components/responses/Error"
 
+  /v1/databases/{dbName}:
+    delete:
+      summary: Supprime une base de données et son utilisateur (Phase 5 — déprovisioning)
+      operationId: deleteDatabase
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: dbName
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Base et utilisateur supprimés
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DatabaseDeleteResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/Error"
+
   /v1/webroots:
     post:
       summary: Crée l'arborescence de dépôt web d'un projet élève
@@ -118,6 +166,27 @@ paths:
         "409":
           $ref: "#/components/responses/Error"
         "422":
+          $ref: "#/components/responses/Error"
+    delete:
+      summary: Supprime le sous-dossier d'un projet élève (jamais la racine élève) — Phase 5
+      operationId: deleteWebroot
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WebrootDeleteRequest"
+      responses:
+        "200":
+          description: Dépôt supprimé
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebrootDeleteResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
           $ref: "#/components/responses/Error"
 
 components:
@@ -219,6 +288,34 @@ components:
         group: { type: string }
         mode: { type: string }
         status: { type: string, enum: [created, already_exists] }
+
+    LinuxAccountDeleteResponse:
+      type: object
+      required: [username, status]
+      properties:
+        username: { type: string }
+        status: { type: string, enum: [deleted] }
+
+    DatabaseDeleteResponse:
+      type: object
+      required: [dbName, status]
+      properties:
+        dbName: { type: string }
+        status: { type: string, enum: [deleted] }
+
+    WebrootDeleteRequest:
+      type: object
+      required: [eleveLogin, projetSlug]
+      properties:
+        eleveLogin: { type: string }
+        projetSlug: { type: string }
+
+    WebrootDeleteResponse:
+      type: object
+      required: [path, status]
+      properties:
+        path: { type: string }
+        status: { type: string, enum: [deleted] }
 
     ErrorResponse:
       type: object

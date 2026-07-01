@@ -7,8 +7,10 @@ use App\Form\ClasseType;
 use App\Repository\ClasseRepository;
 use App\Repository\CredentialRevealRepository;
 use App\Repository\EtablissementRepository;
+use App\Service\Provisioning\ClassBulkOrchestrator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Exception\BadRequestHttpException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -88,6 +90,38 @@ class ClasseController extends AbstractController
         return $this->render('classe/fiche_credentials.html.twig', [
             'classe' => $classe,
             'lignes' => $lignes,
+        ]);
+    }
+
+    #[Route('/{id}/provisionner-tout', name: 'classe_provisionner_tout', methods: ['POST'])]
+    public function provisionnerTout(Classe $classe, Request $request, ClassBulkOrchestrator $bulkOrchestrator): Response
+    {
+        if (!$this->isCsrfTokenValid('classe_provisionner_tout_'.$classe->getId(), $request->request->get('_token'))) {
+            throw new BadRequestHttpException('Jeton CSRF invalide.');
+        }
+
+        $lignes = $bulkOrchestrator->provisionAll($classe);
+
+        return $this->render('classe/bulk_result.html.twig', [
+            'classe' => $classe,
+            'lignes' => $lignes,
+            'action' => 'provisioning',
+        ]);
+    }
+
+    #[Route('/{id}/deprovisionner-tout', name: 'classe_deprovisionner_tout', methods: ['POST'])]
+    public function deprovisionnerTout(Classe $classe, Request $request, ClassBulkOrchestrator $bulkOrchestrator): Response
+    {
+        if (!$this->isCsrfTokenValid('classe_deprovisionner_tout_'.$classe->getId(), $request->request->get('_token'))) {
+            throw new BadRequestHttpException('Jeton CSRF invalide.');
+        }
+
+        $lignes = $bulkOrchestrator->deprovisionAll($classe);
+
+        return $this->render('classe/bulk_result.html.twig', [
+            'classe' => $classe,
+            'lignes' => $lignes,
+            'action' => 'deprovisioning',
         ]);
     }
 }

@@ -15,6 +15,7 @@ use App\Service\Naming\LoginSanitizer;
 use App\Service\Provisioning\CredentialGenerator;
 use App\Service\Provisioning\ProjectProvisioningOrchestrator;
 use App\Service\Provisioning\ProjectSlugSanitizer;
+use App\Service\Provisioning\ProvisioningEventRecorder;
 use App\Service\Provisioning\SshPublicKeyFingerprintCalculator;
 use App\Service\Security\AgentTokenEncryptor;
 use App\Tests\Functional\Fixtures\FakeAgentClient;
@@ -45,6 +46,7 @@ final class ProvisioningOrchestratorTest extends KernelTestCase
             new LoginSanitizer(),
             new CredentialGenerator(),
             new SshPublicKeyFingerprintCalculator(),
+            new ProvisioningEventRecorder($this->entityManager),
             $this->entityManager,
         );
     }

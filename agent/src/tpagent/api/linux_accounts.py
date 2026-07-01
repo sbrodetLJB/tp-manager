@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends
 
 from tpagent.auth import verify_bearer_token
-from tpagent.domain.models import LinuxAccountCreateRequest, LinuxAccountResponse
+from tpagent.domain.errors import UserNotFoundError
+from tpagent.domain.models import LinuxAccountCreateRequest, LinuxAccountDeleteResponse, LinuxAccountResponse
 from tpagent.services.job_ledger import JobLedger
-from tpagent.services.linux_account_service import create_linux_account
+from tpagent.services.linux_account_service import create_linux_account, delete_linux_account
 from tpagent.util.sanitize import validate_linux_username
 
 router = APIRouter(dependencies=[Depends(verify_bearer_token)])
@@ -32,3 +33,14 @@ def post_linux_account(payload: LinuxAccountCreateRequest) -> LinuxAccountRespon
     )
     _ledger.record(payload.requestId, _ENDPOINT, payload_dict, 201, response.model_dump())
     return response
+
+
+@router.delete("/v1/linux-accounts/{username}")
+def delete_linux_account_endpoint(username: str, purgeHome: bool = False) -> LinuxAccountDeleteResponse:
+    validate_linux_username(username, "username")
+
+    already_gone = delete_linux_account(username, purgeHome)
+    if already_gone:
+        raise UserNotFoundError(f'Utilisateur "{username}" introuvable (déjà supprimé).')
+
+    return LinuxAccountDeleteResponse(username=username, status="deleted")

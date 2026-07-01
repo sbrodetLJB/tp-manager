@@ -49,6 +49,44 @@ final class AgentHttpClient implements AgentClientInterface
         );
     }
 
+    public function deleteLinuxAccount(AgentConnection $connection, string $username, bool $purgeHome): void
+    {
+        $path = '/v1/linux-accounts/'.rawurlencode($username).'?purgeHome='.($purgeHome ? 'true' : 'false');
+        $this->requestIgnoringNotFound($connection, 'DELETE', $path, 'USER_NOT_FOUND');
+    }
+
+    public function deleteDatabase(AgentConnection $connection, string $dbName): void
+    {
+        $this->requestIgnoringNotFound($connection, 'DELETE', '/v1/databases/'.rawurlencode($dbName), 'DB_NOT_FOUND');
+    }
+
+    public function deleteWebroot(AgentConnection $connection, string $eleveLogin, string $projetSlug): void
+    {
+        $this->requestIgnoringNotFound(
+            $connection,
+            'DELETE',
+            '/v1/webroots',
+            'WEBROOT_NOT_FOUND',
+            ['eleveLogin' => $eleveLogin, 'projetSlug' => $projetSlug],
+        );
+    }
+
+    /**
+     * Une suppression d'une ressource déjà absente n'est pas une erreur du
+     * point de vue de l'appelant : c'est l'essence même de l'idempotence
+     * d'une opération DELETE (voir ProjectDeprovisioningOrchestrator).
+     */
+    private function requestIgnoringNotFound(AgentConnection $connection, string $method, string $path, string $notFoundErrorCode, ?array $jsonBody = null): void
+    {
+        try {
+            $this->request($connection, $method, $path, $jsonBody);
+        } catch (AgentException $e) {
+            if ($notFoundErrorCode !== $e->errorCode) {
+                throw $e;
+            }
+        }
+    }
+
     private function request(AgentConnection $connection, string $method, string $path, ?array $jsonBody = null): array
     {
         $url = rtrim($connection->getBaseUrl(), '/').$path;

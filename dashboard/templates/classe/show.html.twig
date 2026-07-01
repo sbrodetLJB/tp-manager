@@ -11,6 +11,18 @@
         <a class="btn btn-secondary" href="{{ path('classe_credentials', {id: classe.id}) }}">Fiche identifiants</a>
     </p>
 
+    <p>
+        <form method="post" action="{{ path('classe_provisionner_tout', {id: classe.id}) }}" style="display:inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('classe_provisionner_tout_' ~ classe.id) }}">
+            <button type="submit">Provisionner tous les projets éligibles</button>
+        </form>
+        <form method="post" action="{{ path('classe_deprovisionner_tout', {id: classe.id}) }}" style="display:inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('classe_deprovisionner_tout_' ~ classe.id) }}">
+            <button type="submit" class="btn-secondary">Déprovisionner tous les projets</button>
+        </form>
+    </p>
+    <p class="help">Action synchrone : sur une classe de 30, comptez quelques dizaines de secondes. Le résultat détaillé par élève s'affiche une fois le lot terminé.</p>
+
     {% if classe.eleves|length == 0 %}
         <p>Aucun élève dans cette classe.</p>
     {% else %}

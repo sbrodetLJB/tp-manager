@@ -3,9 +3,7 @@
 namespace App\Service\Provisioning;
 
 use App\Entity\Projet;
-use App\Entity\ProvisioningEvent;
 use App\Enum\ProvisioningAction;
-use App\Enum\ProvisioningEventStatus;
 use App\Enum\ProvisioningStep;
 use App\Enum\SshAuthMethod;
 use App\Service\Agent\AgentClientInterface;
@@ -19,8 +17,8 @@ use Doctrine\ORM\EntityManagerInterface;
 /**
  * Exécute le provisioning d'un projet en 3 étapes fixes (compte Linux -> BDD ->
  * webroot), avec journal d'audit (ProvisioningEvent) à chaque étape. Pas de
- * rollback automatique en cas d'échec partiel en Phase 2 — voir Phase 5 pour
- * les actions "Retry"/"Force cleanup".
+ * rollback automatique en cas d'échec partiel — voir ProjectDeprovisioningOrchestrator
+ * pour les actions "Retry"/"Force cleanup" (Phase 5).
  */
 final class ProjectProvisioningOrchestrator
 {
@@ -30,6 +28,7 @@ final class ProjectProvisioningOrchestrator
         private readonly LoginSanitizer $loginSanitizer,
         private readonly CredentialGenerator $credentialGenerator,
         private readonly SshPublicKeyFingerprintCalculator $fingerprintCalculator,
+        private readonly ProvisioningEventRecorder $eventRecorder,
         private readonly EntityManagerInterface $entityManager,
     ) {
     }
@@ -61,17 +60,17 @@ final class ProjectProvisioningOrchestrator
         $this->entityManager->flush();
 
         try {
-            $this->executeStep($projet, ProvisioningStep::LinuxAccount, fn (string $requestId) => $this->agentClient->createLinuxAccount(
+            $this->eventRecorder->execute($projet, ProvisioningStep::LinuxAccount, ProvisioningAction::Create, fn (string $requestId) => $this->agentClient->createLinuxAccount(
                 $connection,
                 new LinuxAccountRequest($requestId, $login, $homeDir, $projet->getSshAuthMethod()->value, $linuxPassword, $usePublicKey ? $sshPublicKey : null),
             ));
 
-            $this->executeStep($projet, ProvisioningStep::Database, fn (string $requestId) => $this->agentClient->createDatabase(
+            $this->eventRecorder->execute($projet, ProvisioningStep::Database, ProvisioningAction::Create, fn (string $requestId) => $this->agentClient->createDatabase(
                 $connection,
                 new DatabaseRequest($requestId, $dbName, $dbName, $dbPassword),
             ));
 
-            $webrootResponse = $this->executeStep($projet, ProvisioningStep::Webroot, fn (string $requestId) => $this->agentClient->createWebroot(
+            $webrootResponse = $this->eventRecorder->execute($projet, ProvisioningStep::Webroot, ProvisioningAction::Create, fn (string $requestId) => $this->agentClient->createWebroot(
                 $connection,
                 new WebrootRequest($requestId, $login, $projetSlug, $login, 'www-data'),
             ));
@@ -91,41 +90,5 @@ final class ProjectProvisioningOrchestrator
         $this->entityManager->flush();
 
         return ProvisioningResult::success($linuxPassword, $dbPassword);
-    }
-
-    private function executeStep(Projet $projet, ProvisioningStep $step, callable $agentCall): mixed
-    {
-        $requestId = $this->generateRequestId();
-        $this->recordEvent($projet, $step, ProvisioningEventStatus::Started, $requestId);
-
-        try {
-            $result = $agentCall($requestId);
-        } catch (AgentException $e) {
-            $this->recordEvent($projet, $step, ProvisioningEventStatus::Failed, $requestId, $e->getMessage());
-            throw $e;
-        }
-
-        $this->recordEvent($projet, $step, ProvisioningEventStatus::Succeeded, $requestId);
-
-        return $result;
-    }
-
-    private function recordEvent(Projet $projet, ProvisioningStep $step, ProvisioningEventStatus $status, ?string $requestId, ?string $detail = null): void
-    {
-        $event = new ProvisioningEvent($projet, $step, ProvisioningAction::Create, $status);
-        $event->setAgentRequestId($requestId);
-        $event->setDetail($detail);
-
-        $this->entityManager->persist($event);
-        $this->entityManager->flush();
-    }
-
-    private function generateRequestId(): string
-    {
-        $data = random_bytes(16);
-        $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-        $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-
-        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
     }
 }

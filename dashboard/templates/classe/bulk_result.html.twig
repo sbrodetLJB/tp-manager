@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Résultat de l'action de masse — {{ classe.nom }}{% endblock %}
+
+{% block body %}
+    <h1>{{ action == 'provisioning' ? 'Provisioning' : 'Déprovisioning' }} de masse — {{ classe.nom }}</h1>
+
+    {% set succes = lignes|filter(l => l.success)|length %}
+    {% set echecs = lignes|filter(l => not l.success and not l.skipped)|length %}
+    {% set ignores = lignes|filter(l => l.skipped)|length %}
+
+    <p>
+        <span class="badge">{{ succes }} réussi(s)</span>
+        <span class="badge">{{ echecs }} échec(s)</span>
+        <span class="badge">{{ ignores }} ignoré(s)</span>
+    </p>
+
+    {% if lignes|length == 0 %}
+        <p>Aucun projet éligible pour cette action (vérifiez les statuts des projets de la classe).</p>
+    {% else %}
+        <table>
+            <thead><tr><th>Élève</th><th>Projet</th><th>Résultat</th><th>Détail</th></tr></thead>
+            <tbody>
+            {% for ligne in lignes %}
+                <tr>
+                    <td>{{ ligne.eleve.prenom }} {{ ligne.eleve.nom }}</td>
+                    <td><a href="{{ path('projet_show', {id: ligne.projet.id}) }}">{{ ligne.projet.nom }}</a></td>
+                    <td>
+                        {% if ligne.skipped %}
+                            <span class="badge">ignoré</span>
+                        {% elseif ligne.success %}
+                            <span class="badge">réussi</span>
+                        {% else %}
+                            <span class="badge">échec</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if ligne.success and ligne.revealToken is defined and ligne.revealToken %}
+                            <a href="{{ path('credential_reveal', {id: ligne.projet.id, revealToken: ligne.revealToken}) }}">Récupérer les identifiants (lien unique)</a>
+                        {% else %}
+                            {{ ligne.message ?? '—' }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <p><a class="btn" href="{{ path('classe_show', {id: classe.id}) }}">Retour à la classe</a></p>
+{% endblock %}

@@ -102,6 +102,46 @@ def test_create_webroot_matches_contract():
     _assert_matches_schema(response.json(), "WebrootResponse")
 
 
+def test_delete_linux_account_matches_contract():
+    with patch("tpagent.api.linux_accounts.delete_linux_account", return_value=False):
+        response = TestClient(app).delete("/v1/linux-accounts/dupont2", headers=AUTH_HEADERS)
+
+    assert response.status_code == 200
+    _assert_matches_schema(response.json(), "LinuxAccountDeleteResponse")
+
+
+def test_delete_linux_account_not_found_returns_404():
+    with patch("tpagent.api.linux_accounts.delete_linux_account", return_value=True):
+        response = TestClient(app).delete("/v1/linux-accounts/dupont2", headers=AUTH_HEADERS)
+
+    assert response.status_code == 404
+    _assert_matches_schema(response.json(), "ErrorResponse")
+    assert response.json()["errorCode"] == "USER_NOT_FOUND"
+
+
+def test_delete_database_matches_contract():
+    with patch("tpagent.api.databases.get_provisioner") as mock_get_provisioner:
+        mock_get_provisioner.return_value.drop_database_and_user.return_value = False
+
+        response = TestClient(app).delete("/v1/databases/dupont2_sitevitrine", headers=AUTH_HEADERS)
+
+    assert response.status_code == 200
+    _assert_matches_schema(response.json(), "DatabaseDeleteResponse")
+
+
+def test_delete_webroot_matches_contract():
+    with patch("tpagent.api.webroots.delete_webroot", return_value=False):
+        response = TestClient(app).request(
+            "DELETE",
+            "/v1/webroots",
+            headers=AUTH_HEADERS,
+            json={"eleveLogin": "dupont2", "projetSlug": "site-vitrine"},
+        )
+
+    assert response.status_code == 200
+    _assert_matches_schema(response.json(), "WebrootDeleteResponse")
+
+
 def test_replaying_same_request_id_returns_cached_response_without_recalling_service():
     request_id = str(uuid.uuid4())
     payload = {

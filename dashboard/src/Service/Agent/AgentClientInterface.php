@@ -24,4 +24,19 @@ interface AgentClientInterface
     public function createDatabase(AgentConnection $connection, DatabaseRequest $request): DatabaseResponse;
 
     public function createWebroot(AgentConnection $connection, WebrootRequest $request): WebrootResponse;
+
+    /**
+     * Idempotent : ne lève pas si le compte n'existe déjà plus (404 agent = no-op).
+     */
+    public function deleteLinuxAccount(AgentConnection $connection, string $username, bool $purgeHome): void;
+
+    /**
+     * Idempotent : ne lève pas si la base n'existe déjà plus (404 agent = no-op).
+     */
+    public function deleteDatabase(AgentConnection $connection, string $dbName): void;
+
+    /**
+     * Idempotent : ne lève pas si le dépôt n'existe déjà plus (404 agent = no-op).
+     */
+    public function deleteWebroot(AgentConnection $connection, string $eleveLogin, string $projetSlug): void;
 }

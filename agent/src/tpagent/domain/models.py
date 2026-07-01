@@ -62,6 +62,26 @@ class WebrootResponse(BaseModel):
     status: Literal["created", "already_exists"]
 
 
+class LinuxAccountDeleteResponse(BaseModel):
+    username: str
+    status: Literal["deleted"]
+
+
+class DatabaseDeleteResponse(BaseModel):
+    dbName: str
+    status: Literal["deleted"]
+
+
+class WebrootDeleteRequest(BaseModel):
+    eleveLogin: str
+    projetSlug: str
+
+
+class WebrootDeleteResponse(BaseModel):
+    path: str
+    status: Literal["deleted"]
+
+
 class ErrorResponse(BaseModel):
     errorCode: str
     message: str

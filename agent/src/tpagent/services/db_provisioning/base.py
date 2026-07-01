@@ -14,5 +14,10 @@ class DbProvisioner(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def drop_database_and_user(self, db_name: str, db_user: str) -> bool:
+        """Supprime la base + l'utilisateur. Retourne True s'ils n'existaient déjà plus (idempotent)."""
+        raise NotImplementedError
+
+    @abstractmethod
     def engine_version(self) -> str:
         raise NotImplementedError

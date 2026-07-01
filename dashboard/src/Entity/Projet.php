@@ -212,6 +212,46 @@ class Projet
         return $this;
     }
 
+    public function markDeprovisioning(): static
+    {
+        $this->provisioningStatus = ProvisioningStatus::Deprovisioning;
+        $this->provisioningError = null;
+        $this->touch();
+
+        return $this;
+    }
+
+    public function markDeprovisioned(): static
+    {
+        $this->provisioningStatus = ProvisioningStatus::Deprovisioned;
+        $this->provisioningError = null;
+        $this->deprovisionedAt = new \DateTimeImmutable();
+        $this->linuxUsername = null;
+        $this->dbName = null;
+        $this->dbUser = null;
+        $this->webPath = null;
+        $this->sshPublicKeyFingerprint = null;
+        $this->touch();
+
+        return $this;
+    }
+
+    public function getDeprovisionedAt(): ?\DateTimeImmutable
+    {
+        return $this->deprovisionedAt;
+    }
+
+    /**
+     * Un projet dont le compte/la base/le webroot ont pu être créés à un
+     * moment donné (même si le provisioning a ensuite échoué ou a été
+     * partiellement déprovisionné) — sert à décider si "Forcer le nettoyage"
+     * a un sens dans l'interface.
+     */
+    public function hasProvisioningTargetsAssigned(): bool
+    {
+        return null !== $this->linuxUsername;
+    }
+
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;

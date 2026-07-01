@@ -6,6 +6,7 @@ use App\Entity\Eleve;
 use App\Entity\Projet;
 use App\Form\ProjetType;
 use App\Service\Provisioning\CredentialRevealTokenManager;
+use App\Service\Provisioning\ProjectDeprovisioningOrchestrator;
 use App\Service\Provisioning\ProjectProvisioningOrchestrator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -80,5 +81,29 @@ class ProjetController extends AbstractController
             'id' => $projet->getId(),
             'revealToken' => $reveal->getRevealToken(),
         ]);
+    }
+
+    /**
+     * Sert à la fois pour un déprovisioning normal (statut "provisioned") et
+     * pour "Forcer le nettoyage" (statut "failed" avec cibles déjà assignées) :
+     * les suppressions agent sont idempotentes, donc rejouer cette action ne
+     * risque jamais de casser un état déjà propre.
+     */
+    #[Route('/projets/{id}/deprovisionner', name: 'projet_deprovisionner', methods: ['POST'])]
+    public function deprovisionner(Projet $projet, Request $request, ProjectDeprovisioningOrchestrator $orchestrator): Response
+    {
+        if (!$this->isCsrfTokenValid('projet_deprovisionner_'.$projet->getId(), $request->request->get('_token'))) {
+            throw new BadRequestHttpException('Jeton CSRF invalide.');
+        }
+
+        $result = $orchestrator->deprovision($projet);
+
+        if (!$result->success) {
+            $this->addFlash('danger', "Déprovisioning échoué : {$result->errorMessage}");
+        } else {
+            $this->addFlash('success', sprintf('Projet "%s" déprovisionné.', $projet->getNom()));
+        }
+
+        return $this->redirectToRoute('projet_show', ['id' => $projet->getId()]);
     }
 }

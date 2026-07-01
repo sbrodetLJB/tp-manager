@@ -38,3 +38,18 @@ class NotImplementedEngineError(AgentError):
 class PrivilegedScriptError(AgentError):
     status_code = 500
     error_code = "PRIVILEGED_SCRIPT_ERROR"
+
+
+class UserNotFoundError(AgentError):
+    status_code = 404
+    error_code = "USER_NOT_FOUND"
+
+
+class DatabaseNotFoundError(AgentError):
+    status_code = 404
+    error_code = "DB_NOT_FOUND"
+
+
+class WebrootNotFoundError(AgentError):
+    status_code = 404
+    error_code = "WEBROOT_NOT_FOUND"

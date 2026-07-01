@@ -15,3 +15,11 @@ def create_linux_account(username: str, home_dir: str, auth_method: str, secret:
         raise PrivilegedScriptError(f"Sortie inattendue du script de création de compte Linux : {stdout!r}")
 
     return int(match.group(1)), already_existed
+
+
+def delete_linux_account(username: str, purge_home: bool) -> bool:
+    """Retourne True si le compte n'existait déjà plus (idempotent)."""
+    _stdout, already_gone = run_privileged_script(
+        "tpagent-delete-linux-user.sh", username, "true" if purge_home else "false"
+    )
+    return already_gone

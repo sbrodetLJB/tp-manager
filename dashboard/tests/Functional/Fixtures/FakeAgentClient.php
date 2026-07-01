@@ -29,6 +29,15 @@ final class FakeAgentClient implements AgentClientInterface
 
     public string $configDbEngine = 'mysql';
 
+    /**
+     * Simule une panne temporaire (ex: mysqld tué en plein lot) qui n'affecte
+     * que certains identifiants précis, plutôt que TOUTES les requêtes d'une
+     * étape (voir failAtStep) — utile pour les tests d'actions de masse.
+     *
+     * @var array<int, string>
+     */
+    public array $failForDbNames = [];
+
     public function getConfig(AgentConnection $connection): AgentConfig
     {
         if ($this->failGetConfig) {
@@ -49,6 +58,10 @@ final class FakeAgentClient implements AgentClientInterface
     {
         $this->recordAndMaybeFail('database', $request->requestId);
 
+        if (in_array($request->dbName, $this->failForDbNames, true)) {
+            throw new AgentException('SIMULATED_FAILURE', "Échec simulé pour la base \"{$request->dbName}\".");
+        }
+
         return new DatabaseResponse('mysql', $request->dbName, $request->dbUser, 'database-only', 'created');
     }
 
@@ -63,6 +76,21 @@ final class FakeAgentClient implements AgentClientInterface
             '2750',
             'created',
         );
+    }
+
+    public function deleteLinuxAccount(AgentConnection $connection, string $username, bool $purgeHome): void
+    {
+        $this->recordAndMaybeFail('linux_account', 'delete-'.$username);
+    }
+
+    public function deleteDatabase(AgentConnection $connection, string $dbName): void
+    {
+        $this->recordAndMaybeFail('database', 'delete-'.$dbName);
+    }
+
+    public function deleteWebroot(AgentConnection $connection, string $eleveLogin, string $projetSlug): void
+    {
+        $this->recordAndMaybeFail('webroot', 'delete-'.$eleveLogin.'-'.$projetSlug);
     }
 
     private function recordAndMaybeFail(string $step, string $requestId): void

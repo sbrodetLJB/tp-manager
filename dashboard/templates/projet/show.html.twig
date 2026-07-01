@@ -17,7 +17,13 @@
             Base de données : <code>{{ projet.dbName }}</code><br>
             Dépôt web : <code>{{ projet.webPath }}</code>
         </p>
-    {% elseif projet.provisioningStatus.value in ['pending', 'failed'] %}
+        <form method="post" action="{{ path('projet_deprovisionner', {id: projet.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('projet_deprovisionner_' ~ projet.id) }}">
+            <button type="submit" class="btn-secondary">Déprovisionner</button>
+        </form>
+    {% endif %}
+
+    {% if projet.provisioningStatus.value in ['pending', 'failed', 'deprovisioning', 'deprovisioned'] %}
         <form method="post" action="{{ path('projet_provisionner', {id: projet.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('projet_provisionner_' ~ projet.id) }}">
             {% if projet.sshAuthMethod.value == 'public_key' %}
@@ -27,8 +33,16 @@
                     <p class="help">Collée par l'élève ou l'enseignant juste avant le provisioning — jamais enregistrée en base, seule son empreinte l'est.</p>
                 </div>
             {% endif %}
-            <button type="submit">Provisionner</button>
+            <button type="submit">{{ projet.provisioningStatus.value == 'failed' ? 'Réessayer le provisioning' : 'Provisionner' }}</button>
         </form>
+
+        {% if projet.provisioningStatus.value in ['failed', 'deprovisioning'] and projet.hasProvisioningTargetsAssigned %}
+            <form method="post" action="{{ path('projet_deprovisionner', {id: projet.id}) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('projet_deprovisionner_' ~ projet.id) }}">
+                <button type="submit" class="btn-secondary">Forcer le nettoyage</button>
+            </form>
+            <p class="help">Rejoue la suppression sur les trois ressources, sans risque même si certaines sont déjà parties.</p>
+        {% endif %}
     {% endif %}
 
     {% if projet.provisioningError %}
