@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Eleve;
 use App\Entity\Projet;
 use App\Form\ProjetType;
+use App\Service\Provisioning\CredentialRevealTokenManager;
 use App\Service\Provisioning\ProjectProvisioningOrchestrator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -51,13 +52,18 @@ class ProjetController extends AbstractController
     }
 
     #[Route('/projets/{id}/provisionner', name: 'projet_provisionner', methods: ['POST'])]
-    public function provisionner(Projet $projet, Request $request, ProjectProvisioningOrchestrator $orchestrator): Response
-    {
+    public function provisionner(
+        Projet $projet,
+        Request $request,
+        ProjectProvisioningOrchestrator $orchestrator,
+        CredentialRevealTokenManager $credentialRevealTokenManager,
+    ): Response {
         if (!$this->isCsrfTokenValid('projet_provisionner_'.$projet->getId(), $request->request->get('_token'))) {
             throw new BadRequestHttpException('Jeton CSRF invalide.');
         }
 
-        $result = $orchestrator->provision($projet);
+        $publicKey = $request->request->get('publicKey');
+        $result = $orchestrator->provision($projet, is_string($publicKey) ? $publicKey : null);
 
         if (!$result->success) {
             $this->addFlash('danger', "Provisioning échoué : {$result->errorMessage}");
@@ -65,9 +71,14 @@ class ProjetController extends AbstractController
             return $this->redirectToRoute('projet_show', ['id' => $projet->getId()]);
         }
 
-        return $this->render('projet/provisioning_result.html.twig', [
-            'projet' => $projet,
-            'result' => $result,
+        $reveal = $credentialRevealTokenManager->create($projet, [
+            'linuxPassword' => $result->linuxPassword,
+            'dbPassword' => $result->dbPassword,
+        ]);
+
+        return $this->redirectToRoute('credential_reveal', [
+            'id' => $projet->getId(),
+            'revealToken' => $reveal->getRevealToken(),
         ]);
     }
 }

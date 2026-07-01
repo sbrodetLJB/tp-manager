@@ -17,6 +17,9 @@ services:
     build: ./tools/fake-vm
     volumes:
       - ./agent:/opt/tpagent
+    environment:
+      # mysql (défaut) ou postgresql — surchargeable : TPAGENT_DB_ENGINE=postgresql docker compose ... up
+      - TPAGENT_DB_ENGINE=${TPAGENT_DB_ENGINE:-mysql}
     ports:
       - "2222:22"
       - "8000:8000"

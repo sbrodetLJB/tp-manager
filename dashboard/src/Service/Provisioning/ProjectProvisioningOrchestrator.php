@@ -7,6 +7,7 @@ use App\Entity\ProvisioningEvent;
 use App\Enum\ProvisioningAction;
 use App\Enum\ProvisioningEventStatus;
 use App\Enum\ProvisioningStep;
+use App\Enum\SshAuthMethod;
 use App\Service\Agent\AgentClientInterface;
 use App\Service\Agent\AgentException;
 use App\Service\Agent\Dto\DatabaseRequest;
@@ -28,11 +29,12 @@ final class ProjectProvisioningOrchestrator
         private readonly ProjectSlugSanitizer $slugSanitizer,
         private readonly LoginSanitizer $loginSanitizer,
         private readonly CredentialGenerator $credentialGenerator,
+        private readonly SshPublicKeyFingerprintCalculator $fingerprintCalculator,
         private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
-    public function provision(Projet $projet): ProvisioningResult
+    public function provision(Projet $projet, ?string $sshPublicKey = null): ProvisioningResult
     {
         $eleve = $projet->getEleve();
         $etablissement = $eleve->getClasse()->getEtablissement();
@@ -42,12 +44,17 @@ final class ProjectProvisioningOrchestrator
             return ProvisioningResult::failure("Aucune connexion à l'agent configurée pour cet établissement.");
         }
 
+        $usePublicKey = SshAuthMethod::PublicKey === $projet->getSshAuthMethod();
+        if ($usePublicKey && (null === $sshPublicKey || '' === trim($sshPublicKey))) {
+            return ProvisioningResult::failure("Ce projet est configuré pour une authentification par clé publique : collez la clé de l'élève avant de provisionner.");
+        }
+
         $login = $eleve->getLogin();
         $projetSlug = $this->slugSanitizer->sanitize($projet->getNom());
         $dbName = $this->loginSanitizer->sanitize($login.'_'.$projet->getNom(), 63);
         $homeDir = rtrim($etablissement->getWebRootBase(), '/').'/'.$login;
 
-        $linuxPassword = $this->credentialGenerator->generate();
+        $linuxPassword = $usePublicKey ? null : $this->credentialGenerator->generate();
         $dbPassword = $this->credentialGenerator->generate();
 
         $projet->markInProgress();
@@ -56,7 +63,7 @@ final class ProjectProvisioningOrchestrator
         try {
             $this->executeStep($projet, ProvisioningStep::LinuxAccount, fn (string $requestId) => $this->agentClient->createLinuxAccount(
                 $connection,
-                new LinuxAccountRequest($requestId, $login, $homeDir, $projet->getSshAuthMethod()->value, $linuxPassword),
+                new LinuxAccountRequest($requestId, $login, $homeDir, $projet->getSshAuthMethod()->value, $linuxPassword, $usePublicKey ? $sshPublicKey : null),
             ));
 
             $this->executeStep($projet, ProvisioningStep::Database, fn (string $requestId) => $this->agentClient->createDatabase(
@@ -73,6 +80,10 @@ final class ProjectProvisioningOrchestrator
             $this->entityManager->flush();
 
             return ProvisioningResult::failure($e->getMessage());
+        }
+
+        if ($usePublicKey) {
+            $projet->setSshPublicKeyFingerprint($this->fingerprintCalculator->calculate($sshPublicKey));
         }
 
         $projet->assignProvisioningTargets($login, $dbName, $dbName, $webrootResponse->path);

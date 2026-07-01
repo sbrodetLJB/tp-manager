@@ -1,9 +1,10 @@
 #!/bin/sh
 # Usage: tpagent-create-webroot.sh <eleve_login> <projet_slug> <owner> <group> <web_root_base>
 #
-# Phase 2 : ownership simple (owner:group sur toute l'arborescence). Le schéma
-# d'ownership exact requis par le chroot SFTP (racine root:root) sera appliqué
-# en Phase 3 — voir docs/security.md.
+# eleve_home (racine du chroot SFTP, voir tpagent-create-linux-user.sh) reste
+# TOUJOURS root:root — seul le sous-dossier projet est possédé par l'élève.
+# Ne jamais chown eleve_home avec owner/group ici, sous peine de casser le
+# confinement chroot (sshd refuserait alors la connexion).
 set -eu
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 # shellcheck source=lib/common.sh
@@ -32,8 +33,12 @@ esac
 already_existed=0
 [ -d "$projet_path" ] && already_existed=1
 
+mkdir -p "$eleve_home"
+chown root:root "$eleve_home"
+chmod 0755 "$eleve_home"
+
 mkdir -p "$projet_path"
-chown "$owner":"$group" "$eleve_home" "$projet_path"
+chown "$owner":"$group" "$projet_path"
 chmod 2750 "$projet_path"
 
 printf 'path=%s\n' "$projet_path"

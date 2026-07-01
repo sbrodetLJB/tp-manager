@@ -25,8 +25,8 @@ log() {
     printf '[install.sh] %s\n' "$*"
 }
 
-# 1) Groupe et utilisateur système dédiés (Phase 3 utilisera tp-students pour
-# le chroot SFTP des comptes élèves ; créé dès maintenant, sans effet en Phase 2).
+# 1) Groupe et utilisateur système dédiés. tp-students identifie les comptes
+# élèves pour le bloc "Match Group" sshd (chroot SFTP, voir étape 3b).
 getent group tp-students >/dev/null 2>&1 || groupadd --system tp-students
 
 if ! id tpagent >/dev/null 2>&1; then
@@ -54,6 +54,21 @@ if ! visudo -c -f /etc/sudoers.d/tpagent >/dev/null; then
     exit 1
 fi
 log "Règle sudoers installée."
+
+# 3b) Config sshd pour le chroot SFTP des comptes élèves (groupe tp-students).
+mkdir -p /etc/ssh/sshd_config.d
+install -m 644 "$AGENT_HOME/packaging/sshd_config.d/tpagent-sftp.conf" /etc/ssh/sshd_config.d/tpagent-sftp.conf
+if command -v sshd >/dev/null 2>&1 && ! sshd -t; then
+    log "Configuration sshd invalide après ajout de tpagent-sftp.conf, annulation."
+    rm -f /etc/ssh/sshd_config.d/tpagent-sftp.conf
+    exit 1
+fi
+if [ -d /run/systemd/system ] && command -v systemctl >/dev/null 2>&1; then
+    systemctl reload ssh 2>/dev/null || systemctl reload sshd 2>/dev/null || true
+elif [ -f /var/run/sshd.pid ]; then
+    kill -HUP "$(cat /var/run/sshd.pid)" 2>/dev/null || true
+fi
+log "Configuration sshd (chroot SFTP) installée."
 
 # 4) Jeton bearer (généré une seule fois, jamais régénéré silencieusement).
 ENV_FILE="$AGENT_HOME/tpagent.env"

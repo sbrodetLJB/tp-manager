@@ -12,7 +12,7 @@ final class ProvisioningResult
     ) {
     }
 
-    public static function success(string $linuxPassword, string $dbPassword): self
+    public static function success(?string $linuxPassword, string $dbPassword): self
     {
         return new self(true, $linuxPassword, $dbPassword, null);
     }

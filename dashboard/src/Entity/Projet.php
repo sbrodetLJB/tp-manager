@@ -147,6 +147,18 @@ class Projet
         return $this;
     }
 
+    public function getSshPublicKeyFingerprint(): ?string
+    {
+        return $this->sshPublicKeyFingerprint;
+    }
+
+    public function setSshPublicKeyFingerprint(?string $fingerprint): static
+    {
+        $this->sshPublicKeyFingerprint = $fingerprint;
+
+        return $this;
+    }
+
     public function getProvisioningStatus(): ProvisioningStatus
     {
         return $this->provisioningStatus;

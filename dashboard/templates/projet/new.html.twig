@@ -6,6 +6,7 @@
     <h1>Nouveau projet pour {{ eleve.prenom }} {{ eleve.nom }}</h1>
     {{ form_start(form) }}
         <div class="row">{{ form_row(form.nom) }}</div>
+        <div class="row">{{ form_row(form.sshAuthMethod) }}</div>
         <button type="submit">Créer</button>
     {{ form_end(form) }}
 {% endblock %}

@@ -8,6 +8,7 @@
     <p>
         <a class="btn" href="{{ path('eleve_new', {id: classe.id}) }}">Ajouter un élève</a>
         <a class="btn btn-secondary" href="{{ path('import_new', {id: classe.id}) }}">Importer un CSV</a>
+        <a class="btn btn-secondary" href="{{ path('classe_credentials', {id: classe.id}) }}">Fiche identifiants</a>
     </p>
 
     {% if classe.eleves|length == 0 %}

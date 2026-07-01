@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Classe;
 use App\Form\ClasseType;
 use App\Repository\ClasseRepository;
+use App\Repository\CredentialRevealRepository;
 use App\Repository\EtablissementRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -63,5 +64,30 @@ class ClasseController extends AbstractController
     public function show(Classe $classe): Response
     {
         return $this->render('classe/show.html.twig', ['classe' => $classe]);
+    }
+
+    /**
+     * Fiche imprimable (Ctrl+P -> "Enregistrer en PDF" côté navigateur) listant,
+     * pour chaque projet provisionné, le lien de récupération des identifiants
+     * s'il n'a pas encore été consulté.
+     */
+    #[Route('/{id}/credentials', name: 'classe_credentials', methods: ['GET'])]
+    public function ficheCredentials(Classe $classe, CredentialRevealRepository $credentialRevealRepository): Response
+    {
+        $lignes = [];
+        foreach ($classe->getEleves() as $eleve) {
+            foreach ($eleve->getProjets() as $projet) {
+                $lignes[] = [
+                    'eleve' => $eleve,
+                    'projet' => $projet,
+                    'credentialReveal' => $credentialRevealRepository->findLatestForProjet($projet),
+                ];
+            }
+        }
+
+        return $this->render('classe/fiche_credentials.html.twig', [
+            'classe' => $classe,
+            'lignes' => $lignes,
+        ]);
     }
 }

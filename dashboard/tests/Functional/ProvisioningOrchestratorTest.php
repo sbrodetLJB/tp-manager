@@ -10,10 +10,12 @@ use App\Entity\Projet;
 use App\Enum\DbEngine;
 use App\Enum\ProvisioningEventStatus;
 use App\Enum\ProvisioningStatus;
+use App\Enum\SshAuthMethod;
 use App\Service\Naming\LoginSanitizer;
 use App\Service\Provisioning\CredentialGenerator;
 use App\Service\Provisioning\ProjectProvisioningOrchestrator;
 use App\Service\Provisioning\ProjectSlugSanitizer;
+use App\Service\Provisioning\SshPublicKeyFingerprintCalculator;
 use App\Service\Security\AgentTokenEncryptor;
 use App\Tests\Functional\Fixtures\FakeAgentClient;
 use Doctrine\ORM\EntityManagerInterface;
@@ -42,6 +44,7 @@ final class ProvisioningOrchestratorTest extends KernelTestCase
             new ProjectSlugSanitizer(),
             new LoginSanitizer(),
             new CredentialGenerator(),
+            new SshPublicKeyFingerprintCalculator(),
             $this->entityManager,
         );
     }
@@ -87,7 +90,32 @@ final class ProvisioningOrchestratorTest extends KernelTestCase
         self::assertContains(ProvisioningEventStatus::Failed, $statuses);
     }
 
-    private function createProjetPourNouvelEleve(string $login, string $projetNom): Projet
+    public function testPublicKeyProvisioningComputesFingerprintAndReturnsNoLinuxPassword(): void
+    {
+        $projet = $this->createProjetPourNouvelEleve('amelie4', 'app-mobile', SshAuthMethod::PublicKey);
+        $projet = $this->reloadFromDatabase($projet);
+
+        $publicKey = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBXTGO1n9VfMbDx0GkgHSeqQzHLKzGRLvfhTdMga3rHV eleve@laptop';
+        $result = $this->orchestrator->provision($projet, $publicKey);
+
+        self::assertTrue($result->success);
+        self::assertNull($result->linuxPassword);
+        self::assertNotNull($result->dbPassword);
+        self::assertStringStartsWith('SHA256:', $projet->getSshPublicKeyFingerprint());
+    }
+
+    public function testPublicKeyProvisioningFailsFastWithoutCallingAgentWhenKeyMissing(): void
+    {
+        $projet = $this->createProjetPourNouvelEleve('amelie5', 'app-mobile', SshAuthMethod::PublicKey);
+        $projet = $this->reloadFromDatabase($projet);
+
+        $result = $this->orchestrator->provision($projet, null);
+
+        self::assertFalse($result->success);
+        self::assertCount(0, $this->fakeAgentClient->calls, "L'agent ne doit pas être appelé si la clé publique manque.");
+    }
+
+    private function createProjetPourNouvelEleve(string $login, string $projetNom, SshAuthMethod $sshAuthMethod = SshAuthMethod::Password): Projet
     {
         $etablissement = new Etablissement();
         $etablissement->setNom('Lycée de Test')->setDbEngine(DbEngine::Mysql)->setWebRootBase('/var/www/html');
@@ -108,7 +136,7 @@ final class ProvisioningOrchestratorTest extends KernelTestCase
         $this->entityManager->persist($eleve);
 
         $projet = new Projet(DbEngine::Mysql);
-        $projet->setEleve($eleve)->setNom($projetNom);
+        $projet->setEleve($eleve)->setNom($projetNom)->setSshAuthMethod($sshAuthMethod);
         $this->entityManager->persist($projet);
 
         $this->entityManager->flush();
