@@ -11,13 +11,22 @@ EnvironmentFile=-/opt/tpagent/tpagent.env
 ExecStart=/opt/tpagent/.venv/bin/uvicorn tpagent.main:app --app-dir /opt/tpagent/src --host 0.0.0.0 --port 8443
 Restart=on-failure
 
-# Durcissement : même en cas de RCE dans le process FastAPI, celui-ci ne peut
-# qu'invoquer les 6 scripts sudoers fixes, pas lire des fichiers root arbitraires.
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
-PrivateTmp=true
-ReadWritePaths=/opt/tpagent/job_ledger.sqlite /opt/tpagent/var
+# Sécurité : le process FastAPI tourne sans privilège (utilisateur tpagent).
+# Toute action privilégiée passe par sudo, restreint par /etc/sudoers.d/tpagent
+# à exactement 6 scripts (chemins fixes, sans wildcard) - c'est cette règle
+# sudoers, pas un sandbox systemd, qui borne ce que le process peut déclencher
+# même en cas de RCE.
+#
+# Un bloc de durcissement filesystem (NoNewPrivileges, ProtectSystem=strict,
+# ProtectHome, PrivateTmp, ReadWritePaths) a été essayé puis retiré : ces
+# réglages s'appliquent à tout l'arbre de processus, y compris les enfants
+# passés root via sudo (sudo ne crée pas de nouveau namespace de montage).
+# NoNewPrivileges bloque sudo lui-même ("no new privileges flag is set,
+# which prevents sudo from running as root") ; ProtectSystem=strict empêche
+# ensuite les scripts (pourtant root) d'écrire sous /var/www/html. Les deux
+# rendent tout provisioning réel impossible, quelle que soit la config
+# sudoers - à ne pas réintroduire sans revoir en profondeur comment les
+# scripts délégués s'exécutent (namespace de montage séparé, par exemple).
 
 [Install]
 WantedBy=multi-user.target

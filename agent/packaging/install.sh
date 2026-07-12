@@ -53,6 +53,15 @@ check_prerequisites() {
         exit 1
     fi
 
+    # Le mode normal (hors --dev) crée un venv à l'étape 5 : sur Debian/Ubuntu,
+    # ce module est packagé séparément de python3 (ensurepip absent sinon), et
+    # l'échec ne se voyait auparavant qu'en plein milieu de l'installation.
+    if [ "$DEV_MODE" -eq 0 ] && ! "$python_bin" -c 'import ensurepip' >/dev/null 2>&1; then
+        log "ERREUR : le module \"venv\" de python3 est indisponible (ensurepip manquant)."
+        log "Sur Debian/Ubuntu : installez le paquet python3-venv (ex: python3.12-venv selon votre version) puis relancez ce script."
+        exit 1
+    fi
+
     case "$db_engine" in
         mysql | mariadb)
             if ! command -v mysql >/dev/null 2>&1; then

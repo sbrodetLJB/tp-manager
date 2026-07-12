@@ -31,11 +31,17 @@ script revalide donc lui-même ses arguments (voir `agent/scripts/lib/common.sh`
 indépendamment de la validation déjà faite côté API Python — défense en
 profondeur, pas une simple UX.
 
-Le service `tpagent.service` (systemd, sur une vraie VM) ajoute un
-durcissement supplémentaire : `NoNewPrivileges`, `ProtectSystem=strict`,
-`ProtectHome=true`, `PrivateTmp=true`, et un `ReadWritePaths` limité au strict
-nécessaire (journal d'idempotence, logs). Un RCE dans le process FastAPI reste
-ainsi borné aux 6 scripts listés, sans accès direct au reste du système.
+Le service `tpagent.service` (systemd) ne rajoute volontairement **aucun**
+sandbox filesystem (`ProtectSystem`, `ProtectHome`, `NoNewPrivileges`...) :
+ces réglages s'appliquent à tout l'arbre de processus, y compris les enfants
+passés root via `sudo` (qui ne crée pas de nouveau namespace de montage), et
+empêchent donc les 6 scripts eux-mêmes de fonctionner (`sudo` refuse de
+s'exécuter sous `NoNewPrivileges` ; `ProtectSystem=strict` rend `/var/www/html`
+en lecture seule même pour un script devenu root). Testé et confirmé en
+conditions réelles : les deux bloquent tout provisioning, quelle que soit la
+configuration sudoers. La frontière de sécurité de l'agent est donc portée
+en entier par `/etc/sudoers.d/tpagent` (6 scripts à chemin fixe) décrite
+ci-dessus, pas par un sandbox systemd en plus.
 
 Chacun de ces scripts expose une action `reset-password` en plus de
 `create`/`drop` (`tpagent-create-linux-user.sh`, `tpagent-mysql-provision.sh`,
