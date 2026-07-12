@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Eleve;
 use App\Entity\Projet;
+use App\Enum\ProvisioningStatus;
 use App\Form\ProjetType;
 use App\Service\Provisioning\CredentialRevealTokenManager;
 use App\Service\Provisioning\ProjectCredentialResetService;
@@ -137,5 +138,45 @@ class ProjetController extends AbstractController
         }
 
         return $this->redirectToRoute('projet_show', ['id' => $projet->getId()]);
+    }
+
+    /**
+     * Supprime définitivement la fiche projet. Si un compte/une base/un
+     * dépôt web lui sont encore assignés, on les nettoie d'abord via le même
+     * orchestrateur idempotent que "Forcer le nettoyage" - impossible de se
+     * retrouver avec des ressources orphelines sur le serveur agent.
+     */
+    #[Route('/projets/{id}/supprimer', name: 'projet_supprimer', methods: ['POST'])]
+    public function supprimer(Projet $projet, Request $request, ProjectDeprovisioningOrchestrator $orchestrator): Response
+    {
+        if (!$this->isCsrfTokenValid('projet_supprimer_'.$projet->getId(), $request->request->get('_token'))) {
+            throw new BadRequestHttpException('Jeton CSRF invalide.');
+        }
+
+        if (ProvisioningStatus::InProgress === $projet->getProvisioningStatus()) {
+            $this->addFlash('danger', 'Suppression impossible : une opération de provisioning est en cours pour ce projet.');
+
+            return $this->redirectToRoute('projet_show', ['id' => $projet->getId()]);
+        }
+
+        if ($projet->hasProvisioningTargetsAssigned()) {
+            $result = $orchestrator->deprovision($projet);
+
+            if (!$result->success) {
+                $this->addFlash('danger', "Suppression annulée : le nettoyage préalable des ressources a échoué ({$result->errorMessage}).");
+
+                return $this->redirectToRoute('projet_show', ['id' => $projet->getId()]);
+            }
+        }
+
+        $eleveId = $projet->getEleve()->getId();
+        $nom = $projet->getNom();
+
+        $this->entityManager->remove($projet);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', sprintf('Projet "%s" supprimé.', $nom));
+
+        return $this->redirectToRoute('eleve_show', ['id' => $eleveId]);
     }
 }

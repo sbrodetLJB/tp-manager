@@ -61,6 +61,14 @@
         <p class="flash flash-danger">{{ projet.provisioningError }}</p>
     {% endif %}
 
+    {% if projet.provisioningStatus.value != 'in_progress' %}
+        <form method="post" action="{{ path('projet_supprimer', {id: projet.id}) }}" onsubmit="return confirm('Supprimer définitivement ce projet ? Cette action est irréversible.');">
+            <input type="hidden" name="_token" value="{{ csrf_token('projet_supprimer_' ~ projet.id) }}">
+            <button type="submit" class="btn-danger">Supprimer le projet</button>
+        </form>
+        <p class="help">Supprime définitivement la fiche projet. Si un compte, une base ou un dépôt web lui sont encore assignés, ils sont d'abord nettoyés (comme "Forcer le nettoyage"). Le compte élève lui-même n'est pas affecté.</p>
+    {% endif %}
+
     {% if projet.provisioningEvents|length > 0 %}
         <h2>Journal de provisioning</h2>
         <table>
