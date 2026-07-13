@@ -71,8 +71,10 @@ surchargeable avec `TPAGENT_DB_ENGINE=postgresql docker compose -f docker-compos
 ## Installation sur une vraie VM de TP
 
 Voir [docs/guide-utilisateur.md](docs/guide-utilisateur.md) (guide pas-à-pas
-pour les enseignants) et [docs/runbooks/install-agent-on-vm.md](docs/runbooks/install-agent-on-vm.md)
-(installation détaillée de l'agent).
+pour les enseignants), [docs/runbooks/install-agent-on-vm.md](docs/runbooks/install-agent-on-vm.md)
+(installation détaillée de l'agent) et
+[docs/runbooks/install-full-server-on-fresh-debian.md](docs/runbooks/install-full-server-on-fresh-debian.md)
+(agent + dashboard, en partant d'une VM Debian toute neuve).
 
 ## Documentation
 

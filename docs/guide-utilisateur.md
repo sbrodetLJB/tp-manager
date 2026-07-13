@@ -2,7 +2,10 @@
 
 Guide pas-à-pas pour un enseignant qui installe et utilise TP Manager pour la
 première fois. Pour l'installation technique détaillée de l'agent sur une VM
-réelle, voir [runbooks/install-agent-on-vm.md](runbooks/install-agent-on-vm.md).
+réelle, voir [runbooks/install-agent-on-vm.md](runbooks/install-agent-on-vm.md) ;
+pour installer un serveur complet (agent + dashboard) en partant d'une VM
+Debian toute neuve, voir
+[runbooks/install-full-server-on-fresh-debian.md](runbooks/install-full-server-on-fresh-debian.md).
 
 ## 1. Prérequis
 
